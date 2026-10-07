@@ -149,7 +149,7 @@ export default function Home() {
       </section>
 
       {/* Social proof */}
-      <section className="mx-auto grid max-w-7xl gap-6 px-4 lg:grid-cols-2">
+      <section className="mx-auto grid max-w-7xl grid-cols-1 gap-6 px-4 lg:grid-cols-2">
         <Card className="p-6">
           <h3 className="mb-4 font-bold text-ink">Recently sold</h3>
           {!activity.data?.sold?.length ? <p className="text-sm text-ink-mute">No sales yet — be the first.</p> : (
