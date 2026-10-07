@@ -178,8 +178,11 @@ class WithdrawalsView(APIView):
             raise ValidationError({"detail": "Account number and account holder name are required."})
         if method == PaymentMethod.BANK and not (request.data.get("bank_name") or "").strip():
             raise ValidationError({"bank_name": "Enter the bank name and branch."})
-        if amount < settings.MIN_WITHDRAWAL:
-            raise ValidationError({"amount": f"Minimum withdrawal is ৳{settings.MIN_WITHDRAWAL:,.0f}."})
+        from apps.common.models import get_site_settings
+
+        min_withdrawal = get_site_settings().min_withdrawal
+        if amount < min_withdrawal:
+            raise ValidationError({"amount": f"Minimum withdrawal is ৳{min_withdrawal:,.0f}."})
         from apps.escrow.services import check_trade_limit
 
         check_trade_limit(u, amount)

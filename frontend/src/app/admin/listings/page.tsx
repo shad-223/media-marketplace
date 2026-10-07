@@ -1,14 +1,37 @@
 "use client";
 
-import { FileLock2 } from "lucide-react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { FileLock2, SearchCheck } from "lucide-react";
 import Link from "next/link";
 
 import { AdminQueue, DecisionButtons, type Decision } from "@/components/AdminQueue";
 import { PlatformIcon } from "@/components/platform";
-import { Button, Card, StatusBadge } from "@/components/ui";
-import { openProtectedFile } from "@/lib/api";
+import { Badge, Button, Card, ErrorNote, StatusBadge } from "@/components/ui";
+import { api, openProtectedFile } from "@/lib/api";
 import { ago, compact, taka } from "@/lib/format";
 import type { Listing } from "@/lib/types";
+
+/** Fetches the listing's public URL server-side and looks for its MEDIA-xxxxxx code. */
+function OwnershipCheck({ listing }: { listing: Listing }) {
+  const qc = useQueryClient();
+  const check = useMutation({
+    mutationFn: () => api<{ found: boolean | null; error: string }>(`/admin/listings/${listing.id}/check-ownership/`, { body: {} }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["/admin/listings/"] }),
+  });
+  const r = check.data;
+  const found = r ? r.found : listing.ownership_found;
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <Button size="sm" variant="secondary" loading={check.isPending} disabled={!listing.asset_url} title={listing.asset_url ? "" : "No public URL on this listing"} onClick={() => check.mutate()}>
+        <SearchCheck className="h-4 w-4" /> Check ownership
+      </Button>
+      <span className="font-mono text-xs text-ink-mute">{listing.verify_code}</span>
+      {r?.error ? <Badge tone="amber">{r.error}</Badge> : found === true ? <Badge tone="green">Code found ✓</Badge> : found === false ? <Badge tone="red">Code not found</Badge> : null}
+      {!r && listing.ownership_checked_at && <span className="text-xs text-ink-mute">checked {ago(listing.ownership_checked_at)}</span>}
+      <ErrorNote error={check.error} />
+    </div>
+  );
+}
 
 const DECISIONS: Decision[] = [
   { value: "approve", label: "Approve & publish", variant: "success", checkbox: { key: "verified", label: "Metrics verified from proof → show “Verified metrics” badge" } },
@@ -44,6 +67,7 @@ export default function AdminListings() {
             {l.has_proof ? (
               <Button size="sm" variant="secondary" onClick={() => openProtectedFile(`/admin/listings/${l.id}/proof/`)}><FileLock2 className="h-4 w-4" /> View proof</Button>
             ) : <span className="text-xs text-amber-700">No proof uploaded</span>}
+            <OwnershipCheck listing={l} />
             {["pending", "rejected", "paused"].includes(l.status) && <DecisionButtons decisions={DECISIONS} decide={decide} />}
             {l.status === "approved" && <DecisionButtons decisions={[DECISIONS[1]]} decide={decide} />}
           </div>

@@ -26,7 +26,9 @@ class StripeGateway(Gateway):
         return bool(settings.STRIPE_SECRET_KEY)
 
     def gateway_amount(self, deposit):
-        return (deposit.amount / settings.USD_RATE).quantize(Decimal("0.01"), ROUND_HALF_UP)
+        from apps.common.models import get_site_settings
+
+        return (deposit.amount / get_site_settings().usd_rate).quantize(Decimal("0.01"), ROUND_HALF_UP)
 
     def _auth(self):
         return {"Authorization": f"Bearer {settings.STRIPE_SECRET_KEY}"}

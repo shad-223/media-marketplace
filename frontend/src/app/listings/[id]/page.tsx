@@ -12,6 +12,7 @@ import { PLATFORMS, PlatformIcon } from "@/components/platform";
 import { Badge, Button, ButtonLink, Card, ErrorNote, Field, Input, Modal, Spinner, StatusBadge, Textarea } from "@/components/ui";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import { useConfig } from "@/lib/config";
 import { ago, compact, taka, usd } from "@/lib/format";
 import type { Listing } from "@/lib/types";
 
@@ -20,7 +21,7 @@ export default function ListingPage({ params }: { params: { id: string } }) {
   const router = useRouter();
   const qc = useQueryClient();
   const q = useQuery({ queryKey: ["listing", params.id], queryFn: () => api<Listing & { seller_reviews: any[]; my_offer: any }>(`/listings/${params.id}/`) });
-  const cfg = useQuery({ queryKey: ["config"], queryFn: () => api("/config/"), staleTime: Infinity });
+  const cfg = useConfig();
   const summary = useQuery({ queryKey: ["summary"], queryFn: () => api("/wallet/summary/"), enabled: !!me });
   const [buyOpen, setBuyOpen] = useState(false);
   const [offerOpen, setOfferOpen] = useState(false);
@@ -74,6 +75,7 @@ export default function ListingPage({ params }: { params: { id: string } }) {
             <div className="flex flex-wrap items-center gap-2">
               <Badge tone="brand"><PlatformIcon category={l.category} className="h-3.5 w-3.5" /> {l.category_label}</Badge>
               {l.is_verified && <Badge tone="green"><BadgeCheck className="h-3.5 w-3.5" /> Verified metrics</Badge>}
+              {l.ownership_found && <Badge tone="green"><ShieldCheck className="h-3.5 w-3.5" /> Ownership verified</Badge>}
               {l.monetized && <Badge tone="blue">Monetized</Badge>}
               {l.status !== "approved" && <StatusBadge status={l.status} label={l.status_label} />}
             </div>
@@ -157,7 +159,7 @@ export default function ListingPage({ params }: { params: { id: string } }) {
             </div>
             <ul className="mt-6 space-y-2.5 text-sm text-ink-soft">
               <li className="flex gap-2"><ShieldCheck className="h-5 w-5 shrink-0 text-emerald-600" /> Money held in escrow until you confirm ownership</li>
-              <li className="flex gap-2"><Lock className="h-5 w-5 shrink-0 text-emerald-600" /> {cfg.data?.buyer_protection_hours || 72}-hour buyer protection after handover</li>
+              <li className="flex gap-2"><Lock className="h-5 w-5 shrink-0 text-emerald-600" /> {cfg.data?.buyer_protection_hours ?? 72}-hour buyer protection after handover</li>
               <li className="flex gap-2"><BadgeCheck className="h-5 w-5 shrink-0 text-emerald-600" /> Listing reviewed by the Media escrow team</li>
             </ul>
           </Card>
@@ -175,7 +177,7 @@ export default function ListingPage({ params }: { params: { id: string } }) {
                 <div className="mt-2 flex justify-between"><span className="text-ink-soft">Amount to lock</span><span className="font-bold">{taka(price, 2)}</span></div>
                 <div className="mt-2 flex justify-between"><span className="text-ink-soft">Your available balance</span><span className={short ? "font-semibold text-rose-600" : "font-semibold"}>{taka(balance, 2)}</span></div>
               </div>
-              <p className="text-xs text-ink-mute">The seller is paid only after you confirm the handover and the {cfg.data?.buyer_protection_hours || 72}-hour protection window passes. Buyer pays no fee.</p>
+              <p className="text-xs text-ink-mute">The seller is paid only after you confirm the handover and the {cfg.data?.buyer_protection_hours ?? 72}-hour protection window passes. Buyer pays no fee.</p>
               {short ? (
                 <ButtonLink href="/dashboard/wallet" className="w-full">Add ৳{(price - balance).toLocaleString("en-IN")} to your wallet</ButtonLink>
               ) : (

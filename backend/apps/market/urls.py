@@ -15,4 +15,5 @@ urlpatterns = [
     path("admin/listings/", views.AdminListings.as_view()),
     path("admin/listings/<int:pk>/decide/", views.admin_listing_decide),
     path("admin/listings/<int:pk>/proof/", views.admin_listing_proof),
+    path("admin/listings/<int:pk>/check-ownership/", views.admin_check_ownership),
 ]

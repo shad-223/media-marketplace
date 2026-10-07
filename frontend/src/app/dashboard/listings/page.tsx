@@ -6,6 +6,7 @@ import Link from "next/link";
 
 import { PlatformIcon } from "@/components/platform";
 import { Button, ButtonLink, Card, Empty, PageHeader, Spinner, StatusBadge } from "@/components/ui";
+import { VerifyCode } from "@/components/VerifyCode";
 import { api } from "@/lib/api";
 import { ago, compact, taka } from "@/lib/format";
 import type { Listing } from "@/lib/types";
@@ -34,6 +35,7 @@ export default function MyListings() {
                 <Link href={`/listings/${l.id}`} className="block truncate font-semibold text-ink hover:text-brand-700">{l.title}</Link>
                 <p className="text-xs text-ink-mute">{l.category_label} · {compact(l.audience)} · {l.views} views · created {ago(l.created_at)}</p>
                 {l.status === "rejected" && l.admin_note && <p className="mt-1 text-xs text-rose-600">Reviewer: {l.admin_note}</p>}
+                {!["sold", "reserved"].includes(l.status) && <div className="mt-2"><VerifyCode listing={l} compact /></div>}
               </div>
               <div className="text-right">
                 <p className="font-bold">{taka(l.price)}</p>

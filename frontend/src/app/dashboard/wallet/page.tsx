@@ -7,20 +7,29 @@ import { useState } from "react";
 import { OtpField } from "@/components/OtpField";
 import { Button, Card, ErrorNote, Field, Input, Modal, PageHeader, Select, StatusBadge } from "@/components/ui";
 import { api } from "@/lib/api";
+import { type PublicConfig, useConfig } from "@/lib/config";
 import { dateTime, taka } from "@/lib/format";
 
-const MFS_HINT: Record<string, string> = {
-  bkash: "Send Money / Payment to Media bKash merchant 01XXXXXXXXX, then enter the TrxID.",
-  nagad: "Send Money to Media Nagad 01XXXXXXXXX, then enter the TxnID.",
-  rocket: "Send Money to Media Rocket 01XXXXXXXXX-X, then enter the TxnID.",
-  bank: "Transfer to Media Ltd, A/C 0000000000, then enter the bank reference.",
-  card: "Card / USD checkout (Stripe / SSLCommerz) — enter the payment reference.",
-};
+const METHOD_LABEL: Record<string, string> = { bkash: "bKash", nagad: "Nagad", rocket: "Rocket", bank: "Bank", card: "Card" };
+
+/** Where to send a manual deposit — account + instructions are set by admins at /admin/settings. */
+function DepositInstructions({ method, cfg }: { method: string; cfg?: PublicConfig }) {
+  const m = cfg?.deposit_methods?.[method];
+  if (!m?.account && !m?.instructions)
+    return <p className="rounded-xl bg-amber-50 p-3 text-xs text-amber-800">{METHOD_LABEL[method]} deposit details aren’t set up yet — please contact support{cfg?.support_phone ? ` (${cfg.support_phone})` : ""} before sending money.</p>;
+  return (
+    <div className="rounded-xl bg-slate-50 p-3 text-xs text-ink-soft">
+      {m.account && <p className="mb-1 text-sm text-ink">Send to Media {METHOD_LABEL[method]}: <b className="font-mono">{m.account}</b></p>}
+      {m.instructions && <p className="whitespace-pre-line">{m.instructions}</p>}
+      <p className="mt-1">Then enter the transaction ID below.</p>
+    </div>
+  );
+}
 
 export default function WalletPage() {
   const qc = useQueryClient();
   const s = useQuery({ queryKey: ["summary"], queryFn: () => api("/wallet/summary/") });
-  const cfg = useQuery({ queryKey: ["config"], queryFn: () => api("/config/"), staleTime: Infinity });
+  const cfg = useConfig();
   const deps = useQuery({ queryKey: ["deposits"], queryFn: () => api<any[]>("/wallet/deposits/") });
   const wds = useQuery({ queryKey: ["withdrawals"], queryFn: () => api<any[]>("/wallet/withdrawals/") });
   const gws = useQuery({ queryKey: ["gateways"], queryFn: () => api<{ methods: { method: string; online: boolean; gateway_label: string | null; currency: string }[] }>("/wallet/gateways/") });
@@ -110,7 +119,7 @@ export default function WalletPage() {
             </>
           ) : (
             <>
-              <p className="rounded-xl bg-slate-50 p-3 text-xs text-ink-soft">{MFS_HINT[d.method]}</p>
+              <DepositInstructions method={d.method} cfg={cfg.data} />
               <Field label="Transaction ID"><Input value={d.reference} onChange={(e) => setD({ ...d, reference: e.target.value })} required placeholder="e.g. 9JH7K2L1MX" /></Field>
               <Field label="Sent from (number / account)"><Input value={d.sender} onChange={(e) => setD({ ...d, sender: e.target.value })} /></Field>
               <ErrorNote error={deposit.error} />

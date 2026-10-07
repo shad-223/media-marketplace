@@ -21,6 +21,14 @@ CATEGORY_CHOICES = [(v, label) for v, label, _ in CATEGORIES]
 CATEGORY_GROUP = {v: g for v, _, g in CATEGORIES}
 
 
+def new_verify_code():
+    """Short code the seller places on the asset to prove control, e.g. MEDIA-7F3K9Q."""
+    import secrets
+
+    alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"  # no 0/O/1/I
+    return "MEDIA-" + "".join(secrets.choice(alphabet) for _ in range(6))
+
+
 class Listing(models.Model):
     class Status(models.TextChoices):
         PENDING = "pending", "Pending review"
@@ -49,6 +57,9 @@ class Listing(models.Model):
     status = models.CharField(max_length=10, choices=Status.choices, default=Status.PENDING)
     is_verified = models.BooleanField(default=False, help_text="Metrics verified by an admin")
     admin_note = models.CharField(max_length=300, blank=True)
+    verify_code = models.CharField(max_length=20, default=new_verify_code, editable=False)
+    ownership_checked_at = models.DateTimeField(null=True, blank=True)
+    ownership_found = models.BooleanField(null=True, blank=True)
     views = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

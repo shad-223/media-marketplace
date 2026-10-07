@@ -7,6 +7,8 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
+from .permissions import IsStaff
+
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
@@ -35,16 +37,39 @@ def public_stats(request):
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def public_config(request):
+    from .models import get_site_settings
+
+    s = get_site_settings()
     return Response(
         {
-            "platform_fee_percent": str(settings.PLATFORM_FEE_PERCENT),
-            "buyer_protection_hours": settings.BUYER_PROTECTION_HOURS,
-            "unverified_trade_limit": str(settings.UNVERIFIED_TRADE_LIMIT),
-            "min_withdrawal": str(settings.MIN_WITHDRAWAL),
-            "usd_rate": str(settings.USD_RATE),
+            "platform_fee_percent": str(s.platform_fee_percent),
+            "buyer_protection_hours": s.buyer_protection_hours,
+            "unverified_trade_limit": str(s.unverified_trade_limit),
+            "min_withdrawal": str(s.min_withdrawal),
+            "usd_rate": str(s.usd_rate),
             "payments_sandbox": settings.PAYMENTS_SANDBOX,
+            "announcement": s.announcement_text if s.announcement_enabled else "",
+            "support_email": s.support_email,
+            "support_phone": s.support_phone,
+            "deposit_methods": s.deposit_methods(),
         }
     )
+
+
+@api_view(["GET", "PATCH"])
+@permission_classes([IsStaff])
+def admin_settings(request):
+    from .models import SiteSetting, get_site_settings
+    from .serializers import SiteSettingSerializer
+
+    current = get_site_settings()
+    if request.method == "GET":
+        return Response(SiteSettingSerializer(current).data)
+    obj = SiteSetting.objects.filter(pk=1).first() or current
+    s = SiteSettingSerializer(obj, data=request.data, partial=True)
+    s.is_valid(raise_exception=True)
+    s.save()
+    return Response(s.data)
 
 
 @api_view(["GET"])

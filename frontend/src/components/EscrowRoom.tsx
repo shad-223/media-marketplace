@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 import { api, openProtectedFile } from "@/lib/api";
+import { useConfig } from "@/lib/config";
 import { countdown, dateTime, taka } from "@/lib/format";
 import { useLiveChannel } from "@/lib/live";
 import type { Order } from "@/lib/types";
@@ -46,6 +47,7 @@ function Timeline({ o }: { o: Order }) {
 
 export function EscrowRoom({ id, admin }: { id: string; admin?: boolean }) {
   const qc = useQueryClient();
+  const hours = useConfig().data?.buyer_protection_hours ?? 72;
   // Server pushes new messages + status changes; polling only runs (slowly) while the socket is down.
   const live = useLiveChannel(`/ws/orders/${id}/`, async (ev) => {
     if (ev.event === "message") {
@@ -264,7 +266,7 @@ export function EscrowRoom({ id, admin }: { id: string; admin?: boolean }) {
       </Modal>
       <Modal open={modal === "confirm"} onClose={() => setModal("")} title="Confirm handover">
         <div className="space-y-4">
-          <p className="text-sm text-ink-soft">This starts the 72-hour buyer-protection window, after which {taka(o.seller_net)} is released to the seller. You can still open a dispute during the window.</p>
+          <p className="text-sm text-ink-soft">This starts the {hours}-hour buyer-protection window, after which {taka(o.seller_net)} is released to the seller. You can still open a dispute during the window.</p>
           <OtpField purpose="handover" value={otp} onChange={setOtp} />
           <Button variant="success" className="w-full" loading={act.isPending} disabled={otp.length !== 6} onClick={() => act.mutate({ action: "confirm", otp })}>I own the asset — confirm</Button>
           <ErrorNote error={act.error} />

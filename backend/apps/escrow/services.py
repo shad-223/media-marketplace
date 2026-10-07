@@ -2,12 +2,12 @@
 from datetime import timedelta
 from decimal import ROUND_HALF_UP, Decimal
 
-from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 
 from apps.accounts.models import notify
+from apps.common.models import get_site_settings
 from apps.market.models import Listing, Offer
 from apps.wallet import ledger
 from apps.wallet.models import Account, JournalTransaction
@@ -24,13 +24,14 @@ def system_message(order, text):
 
 
 def _fee(amount):
-    return (amount * settings.PLATFORM_FEE_PERCENT / Decimal(100)).quantize(Decimal("0.01"), ROUND_HALF_UP)
+    return (amount * get_site_settings().platform_fee_percent / Decimal(100)).quantize(Decimal("0.01"), ROUND_HALF_UP)
 
 
 def check_trade_limit(user, amount):
-    if not user.is_verified and amount > settings.UNVERIFIED_TRADE_LIMIT:
+    limit = get_site_settings().unverified_trade_limit
+    if not user.is_verified and amount > limit:
         raise ValidationError(
-            {"detail": f"Unverified accounts can trade up to ৳{settings.UNVERIFIED_TRADE_LIMIT:,.0f}. Verify your identity (KYC) to remove this limit."}
+            {"detail": f"Unverified accounts can trade up to ৳{limit:,.0f}. Verify your identity (KYC) to remove this limit."}
         )
 
 
@@ -95,15 +96,16 @@ def confirm_handover(order, user):
         if user.id != order.buyer_id or order.status != S.TRANSFERRED:
             raise ValidationError({"detail": "Only the buyer can confirm, after the seller marks the transfer."})
         now = timezone.now()
+        hours = get_site_settings().buyer_protection_hours
         order.status, order.confirmed_at = S.PROTECTION, now
-        order.release_at = now + timedelta(hours=settings.BUYER_PROTECTION_HOURS)
+        order.release_at = now + timedelta(hours=hours)
         order.save(update_fields=["status", "confirmed_at", "release_at"])
         system_message(
             order,
             f"Buyer confirmed the handover. Funds release to the seller automatically after the "
-            f"{settings.BUYER_PROTECTION_HOURS}-hour buyer-protection window, unless a dispute is opened.",
+            f"{hours}-hour buyer-protection window, unless a dispute is opened.",
         )
-    notify(order.seller, "Buyer confirmed handover", f"Funds release after the {settings.BUYER_PROTECTION_HOURS}h protection window.", f"/dashboard/orders/{order.pk}")
+    notify(order.seller, "Buyer confirmed handover", f"Funds release after the {hours}h protection window.", f"/dashboard/orders/{order.pk}")
     return order
 
 

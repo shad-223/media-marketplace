@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import { useConfig } from "@/lib/config";
 import { useLiveChannel } from "@/lib/live";
 
 import { Avatar } from "./Avatar";
@@ -36,9 +37,12 @@ const NAV = [
 ];
 
 export function NoticeBar() {
+  const cfg = useConfig();
+  // Admins edit or switch off this bar at /admin/settings.
+  if (!cfg.data?.announcement) return null;
   return (
     <div className="bg-ink px-4 py-2 text-center text-xs font-medium text-white/90">
-      🔒 Every trade is protected by Media Escrow — money is released only after you confirm the handover.{" "}
+      {cfg.data.announcement}{" "}
       <Link href="/tutorial" className="font-semibold text-brand-300 underline-offset-2 hover:underline">
         How it works →
       </Link>

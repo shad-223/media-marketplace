@@ -6,10 +6,12 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { api } from "@/lib/api";
+import { feeLabel, useConfig } from "@/lib/config";
 import type { Listing } from "@/lib/types";
 
 import { GROUPS, GROUP_OF, PLATFORMS } from "./platform";
 import { Button, Card, ErrorNote, Field, Input, Select, Textarea } from "./ui";
+import { VerifyCode } from "./VerifyCode";
 
 const FIELDS = ["category", "title", "description", "asset_url", "niche", "country", "audience", "monthly_traffic", "monthly_revenue", "age_months", "price"] as const;
 
@@ -25,6 +27,7 @@ export function ListingForm({ listing }: { listing?: Listing }) {
   const [proof, setProof] = useState<File | null>(null);
   const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => setF({ ...f, [k]: e.target.value });
   const metric = PLATFORMS[f.category]?.metric || "Audience";
+  const cfg = useConfig();
 
   const save = useMutation({
     mutationFn: () => {
@@ -84,11 +87,12 @@ export function ListingForm({ listing }: { listing?: Listing }) {
             {listing?.has_proof && !proof && <span className="text-xs text-ink-mute">(proof on file)</span>}
           </div>
         </Field>
+        {listing ? <VerifyCode listing={listing} /> : <p className="text-xs text-ink-mute">After you submit, you’ll get an ownership code to place on the asset so our team can confirm you control it.</p>}
       </Card>
 
       <Card className="space-y-4 p-5 sm:p-6">
         <h2 className="font-bold text-ink">Price & display</h2>
-        <Field label="Asking price (৳)" hint="Media charges the seller a 5% fee when the trade completes. Buyers pay no fee.">
+        <Field label="Asking price (৳)" hint={`Media charges the seller a ${feeLabel(cfg.data)} fee when the trade completes. Buyers pay no fee.`}>
           <Input inputMode="decimal" value={f.price} onChange={set("price")} required />
         </Field>
         <label className="flex items-center gap-2 text-sm"><input type="checkbox" className="h-4 w-4 accent-brand-600" checked={offers} onChange={(e) => setOffers(e.target.checked)} /> Accept offers (bids) below asking price</label>

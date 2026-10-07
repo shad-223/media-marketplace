@@ -6,12 +6,13 @@ import { useState } from "react";
 
 import { Button, Card, ErrorNote, Field, Input, PageHeader, Select, Spinner } from "@/components/ui";
 import { api } from "@/lib/api";
+import { useConfig } from "@/lib/config";
 import { dateTime, taka } from "@/lib/format";
 
 export default function Kyc() {
   const qc = useQueryClient();
   const q = useQuery({ queryKey: ["kyc"], queryFn: () => api("/me/kyc/") });
-  const cfg = useQuery({ queryKey: ["config"], queryFn: () => api("/config/"), staleTime: Infinity });
+  const cfg = useConfig();
   const [f, setF] = useState({ full_name: "", doc_type: "nid", doc_number: "" });
   const [files, setFiles] = useState<Record<string, File | null>>({ front: null, back: null, selfie: null });
   const submit = useMutation({

@@ -10,6 +10,7 @@ import { ListingCard } from "@/components/ListingCard";
 import { GROUPS, PLATFORMS, PlatformIcon } from "@/components/platform";
 import { ButtonLink, Card, Spinner } from "@/components/ui";
 import { api } from "@/lib/api";
+import { useConfig } from "@/lib/config";
 import { ago, compact, taka } from "@/lib/format";
 import type { Listing, Page } from "@/lib/types";
 
@@ -18,6 +19,7 @@ export default function Home() {
   const [q, setQ] = useState("");
   const [cat, setCat] = useState("");
   const stats = useQuery({ queryKey: ["stats"], queryFn: () => api("/stats/") });
+  const hours = useConfig().data?.buyer_protection_hours ?? 72;
   const cats = useQuery({ queryKey: ["categories"], queryFn: () => api<any[]>("/categories/") });
   const fresh = useQuery({ queryKey: ["listings", "home"], queryFn: () => api<Page<Listing>>("/listings/?sort=newest") });
   const activity = useQuery({ queryKey: ["activity"], queryFn: () => api("/listings/activity/") });
@@ -131,7 +133,7 @@ export default function Home() {
               { icon: Wallet, t: "1. Buyer pays into escrow", d: "Funds are locked by Media — the seller can see the money is there but can't touch it." },
               { icon: MessagesSquare, t: "2. 3-way handover room", d: "Buyer, seller and an escrow agent share one private chat for the transfer." },
               { icon: BadgeCheck, t: "3. Buyer confirms ownership", d: "Only after you verify full control do you confirm the handover with an OTP." },
-              { icon: Lock, t: "4. 72-hour protection", d: "Funds release to the seller after 72 hours — time to catch any recovery attempt." },
+              { icon: Lock, t: `4. ${hours}-hour protection`, d: `Funds release to the seller after ${hours} hours — time to catch any recovery attempt.` },
             ].map((s) => (
               <div key={s.t} className="rounded-2xl bg-white/5 p-5 ring-1 ring-white/10">
                 <s.icon className="h-7 w-7 text-brand-300" />
