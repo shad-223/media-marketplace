@@ -61,6 +61,8 @@ class Listing(models.Model):
     ownership_checked_at = models.DateTimeField(null=True, blank=True)
     ownership_found = models.BooleanField(null=True, blank=True)
     views = models.PositiveIntegerField(default=0)
+    is_featured = models.BooleanField(default=False, help_text="Shown in the homepage Featured section")
+    featured_requested_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     approved_at = models.DateTimeField(null=True, blank=True)
@@ -120,3 +122,30 @@ class Review(models.Model):
     class Meta:
         unique_together = [("order", "reviewer")]
         ordering = ["-created_at"]
+
+
+MAX_LISTING_IMAGES = 8
+
+
+class ListingImage(models.Model):
+    """Extra screenshots for a listing (analytics, revenue, dashboard), shown as a gallery."""
+
+    listing = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name="images")
+    image = models.ImageField(upload_to="listings/gallery/")
+    order = models.PositiveSmallIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["order", "id"]
+
+
+class ListingView(models.Model):
+    """Daily view counter per listing, for seller analytics."""
+
+    listing = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name="daily_views")
+    date = models.DateField()
+    count = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        unique_together = [("listing", "date")]
+        ordering = ["-date"]

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { api } from "@/lib/api";
+import { GalleryPicker, ListingImagesManager, uploadListingImages } from "./ListingImagesManager";
 import { feeLabel, useConfig } from "@/lib/config";
 import type { Listing } from "@/lib/types";
 
@@ -25,6 +26,7 @@ export function ListingForm({ listing }: { listing?: Listing }) {
   const [offers, setOffers] = useState(listing?.allow_offers ?? true);
   const [thumb, setThumb] = useState<File | null>(null);
   const [proof, setProof] = useState<File | null>(null);
+  const [shots, setShots] = useState<File[]>([]);
   const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => setF({ ...f, [k]: e.target.value });
   const metric = PLATFORMS[f.category]?.metric || "Audience";
   const cfg = useConfig();
@@ -39,7 +41,14 @@ export function ListingForm({ listing }: { listing?: Listing }) {
       if (proof) fd.append("proof", proof);
       return api(listing ? `/me/listings/${listing.id}/` : "/me/listings/", { method: listing ? "PATCH" : "POST", body: fd });
     },
-    onSuccess: () => {
+    onSuccess: async (saved: { id: number }) => {
+      if (!listing && shots.length) {
+        try {
+          await uploadListingImages(saved.id, shots);
+        } catch (e) {
+          alert(`Listing saved, but screenshots failed to upload: ${(e as Error).message}`);
+        }
+      }
       qc.invalidateQueries({ queryKey: ["my-listings"] });
       router.push("/dashboard/listings?saved=1");
     },
@@ -99,6 +108,7 @@ export function ListingForm({ listing }: { listing?: Listing }) {
         <Field label="Cover image (optional)" hint="JPG/PNG/WebP, up to 8 MB. Without one we show the platform artwork.">
           <input type="file" accept="image/*" onChange={(e) => setThumb(e.target.files?.[0] || null)} className="text-sm" />
         </Field>
+        {listing ? <ListingImagesManager listingId={listing.id} locked={["reserved", "sold"].includes(listing.status)} /> : <GalleryPicker files={shots} onChange={setShots} />}
       </Card>
 
       <ErrorNote error={save.error} />

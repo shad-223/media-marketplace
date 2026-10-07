@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ReceiptText } from "lucide-react";
 import Link from "next/link";
 
+import { ExportButton } from "@/components/ExportButton";
 import { Card, Empty, PageHeader, Spinner } from "@/components/ui";
 import { api } from "@/lib/api";
 import { dateTime, taka } from "@/lib/format";
@@ -16,7 +17,7 @@ export default function Transactions() {
   const q = useQuery({ queryKey: ["transactions"], queryFn: () => api<Row[]>("/wallet/transactions/") });
   return (
     <>
-      <PageHeader title="Transactions" subtitle="Your complete ledger — every deposit, escrow lock, release, fee and withdrawal. Entries are immutable." />
+      <PageHeader title="Transactions" subtitle="Your complete ledger — every deposit, escrow lock, release, fee and withdrawal. Entries are immutable." action={<ExportButton path="/me/export/transactions.csv" filename="media-transactions.csv" />} />
       {q.isLoading ? <Spinner /> : !q.data?.length ? <Empty icon={ReceiptText} title="No transactions yet" /> : (
         <Card className="overflow-x-auto">
           <table className="w-full min-w-[640px] text-sm">

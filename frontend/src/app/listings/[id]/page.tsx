@@ -8,6 +8,7 @@ import { useState } from "react";
 
 import { Avatar } from "@/components/Avatar";
 import { ListingCover, SaveButton } from "@/components/ListingCard";
+import { ListingGallery } from "@/components/ListingGallery";
 import { PLATFORMS, PlatformIcon } from "@/components/platform";
 import { Badge, Button, ButtonLink, Card, ErrorNote, Field, Input, Modal, Spinner, StatusBadge, Textarea } from "@/components/ui";
 import { api } from "@/lib/api";
@@ -71,6 +72,7 @@ export default function ListingPage({ params }: { params: { id: string } }) {
             <ListingCover listing={l} className="h-56 sm:h-72" />
             {available && <SaveButton listing={l} className="absolute right-4 top-4" />}
           </div>
+          <ListingGallery images={l.images} />
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <Badge tone="brand"><PlatformIcon category={l.category} className="h-3.5 w-3.5" /> {l.category_label}</Badge>

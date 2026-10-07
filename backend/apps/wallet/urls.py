@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import payments, views
+from . import payments, payout_accounts, views
 
 urlpatterns = [
     path("wallet/summary/", views.summary),
@@ -16,6 +16,9 @@ urlpatterns = [
     path("wallet/ipn/sslcommerz/", payments.sslcommerz_ipn),
     path("wallet/webhook/stripe/", payments.stripe_webhook),
     path("wallet/withdrawals/", views.WithdrawalsView.as_view()),
+    path("wallet/payout-accounts/", payout_accounts.payout_accounts),
+    path("wallet/payout-accounts/<int:pk>/", payout_accounts.payout_account_detail),
+    path("me/export/transactions.csv", payout_accounts.export_transactions),
     path("admin/deposits/", views.AdminDeposits.as_view()),
     path("admin/deposits/<int:pk>/decide/", views.admin_deposit_decide),
     path("admin/withdrawals/", views.AdminWithdrawals.as_view()),

@@ -6,6 +6,7 @@ import Link from "next/link";
 
 import { PlatformIcon } from "@/components/platform";
 import { Button, ButtonLink, Card, Empty, PageHeader, Spinner, StatusBadge } from "@/components/ui";
+import { FeatureRequestButton } from "@/components/FeatureRequestButton";
 import { VerifyCode } from "@/components/VerifyCode";
 import { api } from "@/lib/api";
 import { ago, compact, taka } from "@/lib/format";
@@ -41,7 +42,8 @@ export default function MyListings() {
                 <p className="font-bold">{taka(l.price)}</p>
                 <StatusBadge status={l.status} label={l.status_label} />
               </div>
-              <div className="flex gap-1">
+              <div className="flex flex-wrap items-center gap-1">
+                <FeatureRequestButton listing={l} />
                 {!["reserved", "sold"].includes(l.status) && (
                   <ButtonLink href={`/dashboard/listings/${l.id}/edit`} variant="ghost" size="sm"><Pencil className="h-4 w-4" /></ButtonLink>
                 )}

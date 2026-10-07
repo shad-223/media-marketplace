@@ -25,7 +25,7 @@ class ListingCardSerializer(serializers.ModelSerializer):
         fields = [
             "id", "title", "category", "category_label", "group", "niche", "audience", "monthly_traffic",
             "monthly_revenue", "age_months", "monetized", "price", "allow_offers", "thumbnail", "is_verified",
-            "status", "seller", "is_saved", "approved_at", "created_at",
+            "status", "seller", "is_saved", "approved_at", "created_at", "is_featured",
         ]
 
     def get_group(self, obj):
@@ -43,15 +43,21 @@ class ListingDetailSerializer(ListingCardSerializer):
     seller = PublicUserSerializer(read_only=True)
     status_label = serializers.CharField(source="get_status_display", read_only=True)
     has_proof = serializers.SerializerMethodField()
+    images = serializers.SerializerMethodField()
 
     class Meta(ListingCardSerializer.Meta):
         fields = ListingCardSerializer.Meta.fields + [
             "description", "asset_url", "country", "views", "status_label", "admin_note", "has_proof", "updated_at",
-            "verify_code", "ownership_found", "ownership_checked_at",
+            "verify_code", "ownership_found", "ownership_checked_at", "images", "featured_requested_at",
         ]
 
     def get_has_proof(self, obj):
         return bool(obj.proof_ref)
+
+    def get_images(self, obj):
+        from .seller import ListingImageSerializer
+
+        return ListingImageSerializer(obj.images.all(), many=True).data
 
 
 class ListingWriteSerializer(serializers.ModelSerializer):

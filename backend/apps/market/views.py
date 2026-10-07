@@ -17,6 +17,7 @@ from apps.common.crypto import read_private_file, store_private_file
 from apps.common.permissions import IsStaff, validate_upload
 
 from .models import CATEGORIES, Listing, Offer, Review, SavedListing
+from .seller import record_view
 from .serializers import (
     ListingCardSerializer,
     ListingDetailSerializer,
@@ -98,6 +99,7 @@ def listing_detail(request, pk):
         return Response({"detail": "Not found."}, status=404)
     if not is_owner:
         Listing.objects.filter(pk=pk).update(views=F("views") + 1)
+        record_view(pk)
     data = ListingDetailSerializer(listing, context={"saved_ids": saved_ids(request)}).data
     if not is_owner:
         data.pop("admin_note", None)

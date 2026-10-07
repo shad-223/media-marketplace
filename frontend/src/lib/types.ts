@@ -31,6 +31,9 @@ export type Listing = {
   ownership_found?: boolean | null;
   ownership_checked_at?: string | null;
   has_proof?: boolean;
+  images?: { id: number; url: string | null; order: number }[];
+  is_featured?: boolean;
+  featured_requested_at?: string | null;
 };
 
 export type Offer = {

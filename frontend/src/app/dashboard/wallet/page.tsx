@@ -5,6 +5,7 @@ import { ArrowDownToLine, ArrowUpFromLine, Info, ShieldCheck } from "lucide-reac
 import { useState } from "react";
 
 import { OtpField } from "@/components/OtpField";
+import { PayoutAccountPicker, savePayoutAccount } from "@/components/PayoutAccountPicker";
 import { Button, Card, ErrorNote, Field, Input, Modal, PageHeader, Select, StatusBadge } from "@/components/ui";
 import { api } from "@/lib/api";
 import { type PublicConfig, useConfig } from "@/lib/config";
@@ -38,6 +39,7 @@ export default function WalletPage() {
   const [d, setD] = useState({ method: "bkash", amount: "", reference: "", sender: "" });
   const [w, setW] = useState({ method: "bkash", amount: "", account_number: "", account_name: "", bank_name: "" });
   const [otp, setOtp] = useState("");
+  const [saveAcc, setSaveAcc] = useState(true);
 
   const done = () => {
     setModal("");
@@ -54,7 +56,14 @@ export default function WalletPage() {
     },
   });
   const deposit = useMutation({ mutationFn: () => api("/wallet/deposits/", { body: d }), onSuccess: () => { setD({ ...d, amount: "", reference: "" }); done(); } });
-  const withdraw = useMutation({ mutationFn: () => api("/wallet/withdrawals/", { body: { ...w, otp } }), onSuccess: () => { setW({ ...w, amount: "" }); done(); } });
+  const withdraw = useMutation({
+    mutationFn: () => api("/wallet/withdrawals/", { body: { ...w, otp } }),
+    onSuccess: () => {
+      if (saveAcc) savePayoutAccount(w).then(() => qc.invalidateQueries({ queryKey: ["payout-accounts"] })).catch(() => {});
+      setW({ ...w, amount: "" });
+      done();
+    },
+  });
   const sd = s.data || {};
   const history = [
     ...(deps.data || []).map((x) => ({ ...x, type: "Deposit" })),
@@ -133,6 +142,7 @@ export default function WalletPage() {
       <Modal open={modal === "withdraw"} onClose={() => setModal("")} title="Withdraw">
         <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); withdraw.mutate(); }}>
           <p className="text-sm text-ink-soft">Available: <b>{taka(sd.available, 2)}</b> · minimum {taka(cfg.data?.min_withdrawal)}</p>
+          <PayoutAccountPicker selected={w} onPick={(a) => setW({ ...w, ...a })} />
           <Field label="Withdraw to">
             <Select value={w.method} onChange={(e) => setW({ ...w, method: e.target.value })}>
               <option value="bkash">bKash</option><option value="nagad">Nagad</option><option value="rocket">Rocket</option><option value="bank">Bank account</option>
@@ -144,6 +154,7 @@ export default function WalletPage() {
           </div>
           {w.method === "bank" && <Field label="Bank & branch"><Input value={w.bank_name} onChange={(e) => setW({ ...w, bank_name: e.target.value })} required /></Field>}
           <Field label="Amount (৳)"><Input inputMode="decimal" value={w.amount} onChange={(e) => setW({ ...w, amount: e.target.value })} required /></Field>
+          <label className="flex items-center gap-2 text-sm text-ink-soft"><input type="checkbox" className="h-4 w-4 accent-brand-600" checked={saveAcc} onChange={(e) => setSaveAcc(e.target.checked)} /> Save this account for next time</label>
           <OtpField purpose="withdraw" value={otp} onChange={setOtp} />
           <ErrorNote error={withdraw.error} />
           <Button className="w-full" loading={withdraw.isPending} disabled={otp.length !== 6}>Request withdrawal</Button>

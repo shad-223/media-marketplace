@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { Bell, Bookmark, Gavel, Home, IdCard, LayoutList, ReceiptText, Settings, ShoppingCart, Wallet } from "lucide-react";
+import { BarChart3, Bell, Bookmark, Gavel, Home, IdCard, LayoutList, ReceiptText, Settings, ShoppingCart, Wallet } from "lucide-react";
 
 import { Shell } from "@/components/Shell";
 import { api } from "@/lib/api";
@@ -18,6 +18,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { href: "/dashboard/bids", label: "Bids & offers", icon: Gavel, badge: s.data?.offers_received },
     { href: "/dashboard/saved", label: "Saved", icon: Bookmark },
     { href: "/dashboard/wallet", label: "Wallet", icon: Wallet },
+    { href: "/dashboard/analytics", label: "Seller analytics", icon: BarChart3 },
     { href: "/dashboard/transactions", label: "Transactions", icon: ReceiptText },
     { href: "/dashboard/kyc", label: "Verify identity", icon: IdCard },
     { href: "/dashboard/notifications", label: "Notifications", icon: Bell, badge: n.data?.unread },
