@@ -19,6 +19,7 @@ class Account(models.Model):
         WITHDRAW_HOLD = "withdraw_hold", "Withdrawal in progress"
         PLATFORM_REVENUE = "platform_revenue", "Platform commission"
         GATEWAY = "gateway", "Payment gateways (external)"
+        PLATFORM_ADJUSTMENTS = "platform_adjustments", "Manual admin adjustments"
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.PROTECT, related_name="ledger_accounts")
     kind = models.CharField(max_length=20, choices=Kind.choices)

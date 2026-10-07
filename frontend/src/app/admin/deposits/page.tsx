@@ -1,5 +1,6 @@
 "use client";
 
+import { AdminExportButton } from "@/components/AdminExportButton";
 import { AdminQueue, DecisionButtons, type Decision } from "@/components/AdminQueue";
 import { Card, StatusBadge } from "@/components/ui";
 import { dateTime, taka } from "@/lib/format";
@@ -15,6 +16,7 @@ export default function AdminDeposits() {
       title="Deposits"
       subtitle="Match the transaction ID in the bKash / Nagad / Rocket / bank statement before crediting."
       endpoint="/admin/deposits/"
+      action={<AdminExportButton kind="deposits" />}
       statuses={[{ value: "pending", label: "Pending" }, { value: "initiated", label: "Online (awaiting)" }, { value: "approved", label: "Credited" }, { value: "failed", label: "Failed" }, { value: "rejected", label: "Rejected" }]}
       decisions={DECISIONS}
       empty="No deposits here."

@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 
 import { Avatar } from "@/components/Avatar";
+import { DeleteAccountCard } from "@/components/DeleteAccountCard";
 import { OtpField } from "@/components/OtpField";
 import { Button, Card, ErrorNote, Field, Input, PageHeader, Textarea } from "@/components/ui";
 import { api } from "@/lib/api";
@@ -94,6 +95,7 @@ export default function Settings() {
           <Button loading={password.isPending} disabled={otp.length !== 6}>Change password</Button>
         </form>
       </Card>
+      <DeleteAccountCard />
       <Button variant="secondary" onClick={() => { logout(); router.push("/"); }}><LogOut className="h-4 w-4" /> Log out</Button>
     </div>
   );

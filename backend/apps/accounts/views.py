@@ -19,6 +19,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from apps.common.crypto import encrypt_text, read_private_file, store_private_file
 from apps.common.messaging import mask_email, send_code
 from apps.common.permissions import IsStaff, validate_upload
+from apps.support.audit import log_admin
 
 from .models import KycSubmission, Notification, OneTimeCode, User, notify
 from .serializers import (
@@ -327,6 +328,7 @@ def admin_kyc_decide(request, pk):
         "You now have a Verified badge and no trade limits." if approve else note,
         "/dashboard/kyc",
     )
+    log_admin(request, f"kyc.{'approve' if approve else 'reject'}", sub.user, f"KYC {'approved' if approve else 'rejected'} for @{sub.user.username}" + (f": {note}" if note else ""))
     return Response(AdminKycSerializer(sub).data)
 
 
@@ -350,6 +352,7 @@ def admin_user_toggle(request, pk):
         raise ValidationError({"detail": "You cannot suspend this account."})
     user.is_active = not user.is_active
     user.save(update_fields=["is_active"])
+    log_admin(request, "user.reactivate" if user.is_active else "user.suspend", user, f"{'Reactivated' if user.is_active else 'Suspended'} @{user.username}")
     return Response(MeSerializer(user).data)
 
 
@@ -404,4 +407,5 @@ def admin_user_staff(request, pk):
         raise ValidationError({"detail": "You cannot change this account's staff rights."})
     user.is_staff = not user.is_staff
     user.save(update_fields=["is_staff"])
+    log_admin(request, "user.staff_grant" if user.is_staff else "user.staff_revoke", user, f"{'Granted' if user.is_staff else 'Removed'} admin rights for @{user.username}")
     return Response(MeSerializer(user).data)

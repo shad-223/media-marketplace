@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { FileLock2, SearchCheck } from "lucide-react";
+import { FileLock2, SearchCheck, Star } from "lucide-react";
 import Link from "next/link";
 
 import { AdminQueue, DecisionButtons, type Decision } from "@/components/AdminQueue";
@@ -30,6 +30,21 @@ function OwnershipCheck({ listing }: { listing: Listing }) {
       {!r && listing.ownership_checked_at && <span className="text-xs text-ink-mute">checked {ago(listing.ownership_checked_at)}</span>}
       <ErrorNote error={check.error} />
     </div>
+  );
+}
+
+/** Puts a live listing in the homepage "Featured" strip (or takes it out). */
+function FeatureToggle({ listing }: { listing: Listing & { is_featured?: boolean } }) {
+  const qc = useQueryClient();
+  const toggle = useMutation({
+    mutationFn: () => api(`/admin/listings/${listing.id}/feature/`, { body: { featured: !listing.is_featured } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["/admin/listings/"] }),
+    onError: (e) => alert((e as Error).message),
+  });
+  return (
+    <Button size="sm" variant="secondary" loading={toggle.isPending} onClick={() => toggle.mutate()}>
+      <Star className={listing.is_featured ? "h-4 w-4 fill-amber-400 text-amber-400" : "h-4 w-4"} /> {listing.is_featured ? "Unfeature" : "Feature"}
+    </Button>
   );
 }
 
@@ -69,6 +84,7 @@ export default function AdminListings() {
             ) : <span className="text-xs text-amber-700">No proof uploaded</span>}
             <OwnershipCheck listing={l} />
             {["pending", "rejected", "paused"].includes(l.status) && <DecisionButtons decisions={DECISIONS} decide={decide} />}
+            {l.status === "approved" && <FeatureToggle listing={l} />}
             {l.status === "approved" && <DecisionButtons decisions={[DECISIONS[1]]} decide={decide} />}
           </div>
         </Card>

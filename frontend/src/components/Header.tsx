@@ -206,6 +206,8 @@ export function Footer() {
             <li><Link href="/tutorial">How escrow works</Link></li>
             <li><Link href="/tutorial#selling">Selling guide</Link></li>
             <li><Link href="/contest">Contest</Link></li>
+            <li><Link href="/help">Help & FAQ</Link></li>
+            <li><Link href="/terms">Terms</Link> · <Link href="/privacy">Privacy</Link></li>
           </ul>
         </div>
         <div>

@@ -69,6 +69,9 @@ def admin_settings(request):
     s = SiteSettingSerializer(obj, data=request.data, partial=True)
     s.is_valid(raise_exception=True)
     s.save()
+    from apps.support.audit import log_admin
+
+    log_admin(request, "settings.update", None, "Platform settings changed: " + ", ".join(sorted(request.data.keys()))[:250])
     return Response(s.data)
 
 
