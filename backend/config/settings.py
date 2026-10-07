@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     "apps.market",
     "apps.wallet",
     "apps.escrow",
+    "apps.support",
 ]
 
 MIDDLEWARE = [

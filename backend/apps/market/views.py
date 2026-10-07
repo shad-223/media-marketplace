@@ -15,6 +15,7 @@ from rest_framework.views import APIView
 from apps.accounts.models import notify
 from apps.common.crypto import read_private_file, store_private_file
 from apps.common.permissions import IsStaff, validate_upload
+from apps.support.audit import log_admin
 
 from .models import CATEGORIES, Listing, Offer, Review, SavedListing
 from .serializers import (
@@ -77,6 +78,10 @@ class MarketplaceList(generics.ListAPIView):
             qs = qs.filter(is_verified=True)
         if p.get("monetized"):
             qs = qs.filter(monetized=True)
+        if p.get("featured"):
+            # is_featured is added by the seller-features migration; until it exists there are no featured listings.
+            has_field = any(f.name == "is_featured" for f in Listing._meta.get_fields())
+            qs = qs.filter(is_featured=True) if has_field else qs.none()
         if p.get("min_audience", "").isdigit():
             qs = qs.filter(audience__gte=int(p["min_audience"]))
         order = {
@@ -279,6 +284,7 @@ def admin_listing_decide(request, pk):
         raise ValidationError({"decision": "approve or reject"})
     listing.admin_note = note
     listing.save()
+    log_admin(request, f"listing.{decision}", listing, f"Listing “{listing.title}” {'approved' if decision == 'approve' else 'rejected'}" + (f": {note}" if note else ""), verified=listing.is_verified)
     return Response(ListingDetailSerializer(listing).data)
 
 
@@ -310,6 +316,7 @@ def admin_check_ownership(request, pk):
         return Response({"found": None, "error": str(e), "verify_code": listing.verify_code}, status=200)
     listing.ownership_found, listing.ownership_checked_at = found, timezone.now()
     listing.save(update_fields=["ownership_found", "ownership_checked_at"])
+    log_admin(request, "listing.check_ownership", listing, f"Ownership check on “{listing.title}”: {'found' if found else 'not found'}", found=found)
     return Response(
         {"found": found, "error": "", "verify_code": listing.verify_code, "checked_at": listing.ownership_checked_at}
     )

@@ -6,6 +6,7 @@ import { BadgeCheck, CalendarDays, MailCheck, Star, Store } from "lucide-react";
 import { Avatar } from "@/components/Avatar";
 import { ListingCard } from "@/components/ListingCard";
 import { PlatformIcon } from "@/components/platform";
+import { ReportButton } from "@/components/ReportButton";
 import { Card, Empty, Spinner } from "@/components/ui";
 import { api } from "@/lib/api";
 import { ago } from "@/lib/format";
@@ -58,6 +59,7 @@ export default function PublicProfile({ params }: { params: { username: string }
             </h1>
             {u.bio && <p className="mt-1 text-sm text-ink-soft">{u.bio}</p>}
             <p className="mt-2 flex items-center gap-1 text-xs text-ink-mute"><CalendarDays className="h-3.5 w-3.5" /> Member since {new Date(u.date_joined).toLocaleDateString("en-GB", { month: "long", year: "numeric" })}</p>
+            <div className="mt-2"><ReportButton username={u.username} ownerId={u.id} /></div>
           </div>
           <dl className="grid w-full grid-cols-3 gap-2 text-center sm:w-auto">
             <div className="rounded-xl bg-slate-50 px-4 py-3"><dt className="text-[11px] text-ink-mute">Rating</dt><dd className="font-bold">★ {u.rating.average || "—"}</dd></div>

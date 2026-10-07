@@ -48,6 +48,7 @@ export default function RegisterPage() {
         </Field>
         <ErrorNote error={err} />
         <Button className="w-full" size="lg" loading={busy}>Create account</Button>
+        <p className="text-center text-xs text-ink-mute">By signing up you agree to our <Link href="/terms" className="underline">Terms</Link> and <Link href="/privacy" className="underline">Privacy Policy</Link>.</p>
       </form>
       <p className="mt-6 text-center text-sm text-ink-soft">
         Already have an account? <Link href="/login" className="font-semibold text-brand-700">Log in</Link>

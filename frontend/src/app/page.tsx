@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { FeaturedListings } from "@/components/FeaturedListings";
 import { ListingCard } from "@/components/ListingCard";
 import { GROUPS, PLATFORMS, PlatformIcon } from "@/components/platform";
 import { ButtonLink, Card, Spinner } from "@/components/ui";
@@ -107,6 +108,8 @@ export default function Home() {
           </div>
         ))}
       </section>
+
+      <FeaturedListings />
 
       {/* New listings */}
       <section className="mx-auto max-w-7xl px-4 py-6">

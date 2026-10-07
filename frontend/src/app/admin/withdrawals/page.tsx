@@ -1,5 +1,6 @@
 "use client";
 
+import { AdminExportButton } from "@/components/AdminExportButton";
 import { AdminQueue, DecisionButtons, type Decision } from "@/components/AdminQueue";
 import { Badge, Card, StatusBadge } from "@/components/ui";
 import { dateTime, taka } from "@/lib/format";
@@ -15,6 +16,7 @@ export default function AdminWithdrawals() {
       title="Withdrawal requests"
       subtitle="Send the payout from the gateway first, then record its transaction ID here."
       endpoint="/admin/withdrawals/"
+      action={<AdminExportButton kind="withdrawals" />}
       statuses={[{ value: "pending", label: "Pending" }, { value: "paid", label: "Paid" }, { value: "rejected", label: "Rejected" }]}
       decisions={DECISIONS}
       empty="No withdrawals here."

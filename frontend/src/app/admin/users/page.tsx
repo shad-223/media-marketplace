@@ -6,10 +6,72 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { Avatar } from "@/components/Avatar";
-import { Button, Card, ErrorNote, Input, Modal, PageHeader, Spinner, StatusBadge } from "@/components/ui";
+import { AdminExportButton } from "@/components/AdminExportButton";
+import { Button, Card, ErrorNote, Field, Input, Modal, PageHeader, Spinner, StatusBadge } from "@/components/ui";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { ago, dateTime, taka } from "@/lib/format";
+
+/** Listings, balance adjustment (superuser), KYC revoke and temporary password for one user. */
+function UserTools({ user, onDone }: { user: any; onDone: () => void }) {
+  const { me } = useAuth();
+  const listings = useQuery({ queryKey: ["admin-user-listings", user.id], queryFn: () => api<any[]>(`/admin/users/${user.id}/listings/`) });
+  const [mode, setMode] = useState<"" | "adjust" | "revoke">("");
+  const [amount, setAmount] = useState("");
+  const [reason, setReason] = useState("");
+  const [temp, setTemp] = useState("");
+  const run = useMutation({
+    mutationFn: (kind: "adjust" | "revoke" | "temp") =>
+      kind === "adjust" ? api(`/admin/users/${user.id}/adjust/`, { body: { amount, reason } })
+        : kind === "revoke" ? api(`/admin/users/${user.id}/revoke-kyc/`, { body: { reason } })
+        : api(`/admin/users/${user.id}/temp-password/`, { body: {} }),
+    onSuccess: (d: any, kind) => {
+      if (kind === "temp") setTemp(d.temporary_password);
+      setMode("");
+      setAmount("");
+      setReason("");
+      onDone();
+    },
+  });
+  return (
+    <div className="space-y-3">
+      <div>
+        <p className="mb-2 text-sm font-bold">Listings ({listings.data?.length ?? "…"})</p>
+        {!!listings.data?.length && (
+          <ul className="max-h-40 divide-y divide-slate-100 overflow-y-auto rounded-xl border border-slate-200">
+            {listings.data.map((l) => (
+              <li key={l.id}>
+                <Link href={`/listings/${l.id}`} target="_blank" className="flex items-center gap-3 px-3 py-2 text-sm hover:bg-slate-50">
+                  <span className="min-w-0 flex-1 truncate">{l.title}</span>
+                  <span className="font-semibold">{taka(l.price)}</span>
+                  <StatusBadge status={l.status} label={l.status_label} />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {me?.is_superuser && <Button size="sm" variant="secondary" onClick={() => setMode(mode === "adjust" ? "" : "adjust")}>Adjust balance</Button>}
+        {u_verified(user) && <Button size="sm" variant="secondary" onClick={() => setMode(mode === "revoke" ? "" : "revoke")}>Revoke KYC</Button>}
+        {me?.is_superuser && !user.is_superuser && user.id !== me.id && (
+          <Button size="sm" variant="secondary" loading={run.isPending && run.variables === "temp"} onClick={() => confirm("Set a new temporary password for this user?") && run.mutate("temp")}>Temporary password</Button>
+        )}
+      </div>
+      {temp && <p className="rounded-xl bg-amber-50 p-3 text-sm text-amber-900">Temporary password (shown once): <b className="font-mono select-all">{temp}</b></p>}
+      {mode && (
+        <div className="space-y-3 rounded-xl border border-slate-200 p-3">
+          {mode === "adjust" && <Field label="Amount (৳)" hint="Positive credits the user, negative debits. Recorded in the ledger as an adjustment."><Input inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="500 or -250" /></Field>}
+          <Field label={mode === "adjust" ? "Reason (shown to the user)" : "Reason for revoking (sent to the user)"}><Input value={reason} onChange={(e) => setReason(e.target.value)} /></Field>
+          <Button size="sm" variant={mode === "revoke" ? "danger" : "primary"} loading={run.isPending} onClick={() => run.mutate(mode)}>{mode === "adjust" ? "Post adjustment" : "Revoke verification"}</Button>
+        </div>
+      )}
+      <ErrorNote error={run.error} />
+    </div>
+  );
+}
+
+const u_verified = (u: { kyc_status: string }) => u.kyc_status === "verified";
 
 function UserDetail({ id, onClose }: { id: number; onClose: () => void }) {
   const { me } = useAuth();
@@ -74,6 +136,8 @@ function UserDetail({ id, onClose }: { id: number; onClose: () => void }) {
             )}
           </div>
 
+          <UserTools user={u} onDone={refresh} />
+
           <div className="flex flex-wrap gap-2 border-t border-slate-100 pt-4">
             <Link href={`/u/${u.username}`} target="_blank" className="mr-auto self-center text-sm font-semibold text-brand-700">Public profile ↗</Link>
             {!u.is_superuser && u.id !== me?.id && (
@@ -98,7 +162,7 @@ export default function AdminUsers() {
   const users = useQuery({ queryKey: ["admin-users", q], queryFn: () => api(`/admin/users/?q=${encodeURIComponent(q)}`) });
   return (
     <>
-      <PageHeader title="Users" subtitle={users.data ? `${users.data.count} accounts` : ""} />
+      <PageHeader title="Users" subtitle={users.data ? `${users.data.count} accounts` : ""} action={<AdminExportButton kind="users" />} />
       <Input placeholder="Search email, username or phone…" value={q} onChange={(e) => setQ(e.target.value)} className="mb-4 max-w-sm" />
       {users.isLoading ? <Spinner /> : (
         <Card className="divide-y divide-slate-100">

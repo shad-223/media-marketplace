@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { CheckCircle2, XCircle } from "lucide-react";
 import Link from "next/link";
 
+import { AdminExportButton } from "@/components/AdminExportButton";
 import { Card, PageHeader, Spinner } from "@/components/ui";
 import { api } from "@/lib/api";
 import { taka } from "@/lib/format";
@@ -30,10 +31,13 @@ export default function AdminHome() {
     { href: "/admin/kyc", label: "KYC to review", n: d.queues.kyc },
     { href: "/admin/withdrawals", label: "Withdrawals to pay", n: d.queues.withdrawals },
     { href: "/admin/deposits", label: "Deposits to verify", n: d.queues.deposits },
+    { href: "/admin/reports", label: "Open reports", n: d.queues.reports ?? 0 },
+    { href: "/admin/support", label: "Support tickets", n: d.queues.tickets ?? 0 },
+    { href: "/admin/support?tab=deletions", label: "Deletion requests", n: d.queues.deletions ?? 0 },
   ];
   return (
     <>
-      <PageHeader title="Platform analytics" subtitle="GMV, commissions, escrow exposure and work queues." />
+      <PageHeader title="Platform analytics" subtitle="GMV, commissions, escrow exposure and work queues." action={<AdminExportButton kind="ledger" label="Export ledger" />} />
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {kpis.map((k) => (
           <Card key={k.label} className="p-4">

@@ -9,6 +9,7 @@ import { useState } from "react";
 import { Avatar } from "@/components/Avatar";
 import { ListingCover, SaveButton } from "@/components/ListingCard";
 import { PLATFORMS, PlatformIcon } from "@/components/platform";
+import { ReportButton } from "@/components/ReportButton";
 import { Badge, Button, ButtonLink, Card, ErrorNote, Field, Input, Modal, Spinner, StatusBadge, Textarea } from "@/components/ui";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
@@ -162,6 +163,7 @@ export default function ListingPage({ params }: { params: { id: string } }) {
               <li className="flex gap-2"><Lock className="h-5 w-5 shrink-0 text-emerald-600" /> {cfg.data?.buyer_protection_hours ?? 72}-hour buyer protection after handover</li>
               <li className="flex gap-2"><BadgeCheck className="h-5 w-5 shrink-0 text-emerald-600" /> Listing reviewed by the Media escrow team</li>
             </ul>
+            <div className="mt-4 border-t border-slate-100 pt-3"><ReportButton listing={l.id} ownerId={l.seller.id} /></div>
           </Card>
         </aside>
       </div>

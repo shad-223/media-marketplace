@@ -14,6 +14,7 @@ from rest_framework.views import APIView
 from apps.accounts.models import OneTimeCode, User
 from apps.common.crypto import read_private_file, store_private_file
 from apps.common.permissions import IsStaff, validate_upload
+from apps.support.audit import log_admin
 from apps.market.models import Listing, Review
 from apps.market.serializers import ListingCardSerializer, SellerMiniSerializer
 from apps.wallet import ledger
@@ -224,8 +225,19 @@ def admin_order_action(request, pk):
         services.refund(order, by=request.user, reason=f"refunded by escrow agent: {note}")
     else:
         raise ValidationError({"action": "release or refund"})
+    log_admin(request, f"order.{action}", order, f"{order.code} {action}d by escrow agent" + (" (dispute resolved)" if open_dispute else "") + f": {note}", amount=order.amount)
     order.refresh_from_db()
     return Response(OrderDetailSerializer(order).data)
+
+
+def _support_queues():
+    from apps.support.models import DeletionRequest, Report, Ticket
+
+    return {
+        "reports": Report.objects.filter(status=Report.Status.OPEN).count(),
+        "tickets": Ticket.objects.filter(status=Ticket.Status.OPEN).count(),
+        "deletions": DeletionRequest.objects.filter(status=DeletionRequest.Status.PENDING).count(),
+    }
 
 
 @api_view(["GET"])
@@ -265,6 +277,7 @@ def admin_overview(request):
                 "disputes": Dispute.objects.filter(status=Dispute.Status.OPEN).count(),
                 "withdrawals": Withdrawal.objects.filter(status=Withdrawal.Status.PENDING).count(),
                 "deposits": Deposit.objects.filter(status=Deposit.Status.PENDING).count(),
+                **_support_queues(),
             },
             "series": series,
             "today_orders": Order.objects.filter(created_at__date=now.date()).count(),

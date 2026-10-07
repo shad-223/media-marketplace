@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { PlatformIcon } from "@/components/platform";
+import { AdminExportButton } from "@/components/AdminExportButton";
 import { Card, Empty, PageHeader, Spinner, StatusBadge, Tabs } from "@/components/ui";
 import { api } from "@/lib/api";
 import { countdown, dateTime, taka } from "@/lib/format";
@@ -32,7 +33,7 @@ export default function AdminOrders() {
   const list: Order[] = orders.data?.results || [];
   return (
     <>
-      <PageHeader title="Escrow & disputes" subtitle="Monitor every handover room, resolve disputes, release or refund." />
+      <PageHeader title="Escrow & disputes" subtitle="Monitor every handover room, resolve disputes, release or refund." action={<AdminExportButton kind="orders" />} />
       <Tabs value={tab} onChange={setTab} tabs={[{ value: "disputes", label: "Open disputes", count: disputes.data?.length }, { value: "open", label: "Active escrow" }, { value: "completed", label: "Completed" }, { value: "refunded", label: "Refunded" }]} />
       <div className="mt-5">
         {tab === "disputes" ? (

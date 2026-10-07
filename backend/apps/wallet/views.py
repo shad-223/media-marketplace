@@ -13,6 +13,7 @@ from rest_framework.views import APIView
 
 from apps.accounts.models import OneTimeCode, notify
 from apps.common.permissions import IsStaff
+from apps.support.audit import log_admin
 
 from . import ledger
 from .models import Account, Deposit, Entry, JournalTransaction, PaymentMethod, Withdrawal
@@ -231,6 +232,7 @@ def admin_deposit_decide(request, pk):
             dep.status, dep.note, dep.reviewed_by, dep.reviewed_at = Deposit.Status.REJECTED, note, request.user, timezone.now()
             dep.save()
             notify(dep.user, "Deposit rejected", note, "/dashboard/wallet")
+    log_admin(request, f"deposit.{dep.status}", dep, f"Deposit #{dep.pk} ৳{dep.amount} {dep.status} for @{dep.user.username}" + (f": {note}" if note else ""), amount=dep.amount)
     return Response(DepositSerializer(dep).data)
 
 
@@ -266,6 +268,7 @@ def admin_withdrawal_decide(request, pk):
             notify(w.user, "Withdrawal rejected", f"{note} — the amount is back in your available balance.", "/dashboard/wallet")
         w.note, w.reviewed_by, w.reviewed_at = note, request.user, timezone.now()
         w.save()
+    log_admin(request, f"withdrawal.{w.status}", w, f"Withdrawal #{w.pk} ৳{w.amount} {w.status} for @{w.user.username}" + (f" ref {w.payout_reference}" if w.payout_reference else "") + (f": {note}" if note else ""), amount=w.amount)
     return Response(WithdrawalSerializer(w).data)
 
 

@@ -11,8 +11,9 @@ export type Decision = { value: string; label: string; variant?: "success" | "da
 
 /** Generic "review queue" page: status tabs, a list, and a decide modal. */
 export function AdminQueue<T extends { id: number }>({
-  title, subtitle, endpoint, statuses, decisions, render, empty,
+  title, subtitle, endpoint, statuses, decisions, render, empty, action,
 }: {
+  action?: React.ReactNode;
   title: string;
   subtitle?: string;
   endpoint: string;
@@ -44,7 +45,7 @@ export function AdminQueue<T extends { id: number }>({
 
   return (
     <>
-      <PageHeader title={title} subtitle={subtitle} />
+      <PageHeader title={title} subtitle={subtitle} action={action} />
       <Tabs value={status} onChange={setStatus} tabs={statuses} />
       <div className="mt-5 space-y-3">
         {q.isLoading ? <Spinner /> : !items.length ? <Empty title={empty} /> : items.map((it) => (
