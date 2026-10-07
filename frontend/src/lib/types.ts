@@ -42,6 +42,8 @@ export type Offer = {
   buyer: Mini;
   amount: string;
   message: string;
+  counter_amount: string | null;
+  counter_message: string;
   status: string;
   status_label: string;
   created_at: string;
@@ -66,6 +68,7 @@ export type Order = {
   disputes?: { id: number; opened_by: string; reason: string; status: string; resolution: string; admin_note: string; created_at: string }[];
   reviews?: { reviewer: string; rating: number; comment: string }[];
   my_role?: "buyer" | "seller" | "admin";
+  cancel_request?: { id: number; requested_by: string; reason: string; created_at: string } | null;
 };
 
 export type Page<T> = { count: number; next: string | null; previous: string | null; results: T[] };

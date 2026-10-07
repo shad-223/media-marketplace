@@ -8,6 +8,8 @@ import { Suspense, useState } from "react";
 
 import { ListingCard } from "@/components/ListingCard";
 import { GROUP_OF, GROUPS, PLATFORMS, PlatformIcon } from "@/components/platform";
+import { RecentlyViewed } from "@/components/RecentlyViewed";
+import { SaveSearchButton } from "@/components/SaveSearchButton";
 import { Button, Empty, Input, Select, Spinner } from "@/components/ui";
 import { api } from "@/lib/api";
 import type { Listing, Page } from "@/lib/types";
@@ -85,7 +87,8 @@ function Marketplace() {
           <h1 className="text-2xl font-bold text-ink">Marketplace</h1>
           <p className="text-sm text-ink-soft">{data.data ? `${data.data.count} assets for sale` : "Loading…"}{sp.get("q") ? ` matching “${sp.get("q")}”` : ""}</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          <SaveSearchButton />
           <Button variant="secondary" className="lg:hidden" onClick={() => setShowFilters(!showFilters)}>
             <SlidersHorizontal className="h-4 w-4" /> Filters
           </Button>
@@ -98,6 +101,7 @@ function Marketplace() {
           </Select>
         </div>
       </div>
+      <RecentlyViewed className="mb-6" />
       <div className="flex gap-8">
         <aside className={clsx("w-60 shrink-0", showFilters ? "fixed inset-0 z-50 w-full overflow-y-auto bg-white p-5" : "hidden lg:block")}>
           {showFilters && (

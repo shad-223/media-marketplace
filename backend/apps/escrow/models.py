@@ -79,3 +79,23 @@ class Dispute(models.Model):
 
     class Meta:
         ordering = ["-created_at"]
+
+
+class CancelRequest(models.Model):
+    """Mutual cancellation before the asset is transferred. The other party must agree."""
+
+    class Status(models.TextChoices):
+        PENDING = "pending", "Pending"
+        ACCEPTED = "accepted", "Accepted"
+        DECLINED = "declined", "Declined"
+        WITHDRAWN = "withdrawn", "Withdrawn"
+
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="cancel_requests")
+    requested_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="+")
+    reason = models.CharField(max_length=500)
+    status = models.CharField(max_length=10, choices=Status.choices, default=Status.PENDING)
+    created_at = models.DateTimeField(auto_now_add=True)
+    responded_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-created_at"]

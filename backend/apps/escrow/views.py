@@ -52,7 +52,13 @@ class OrderDetailSerializer(OrderSerializer):
     reviews = serializers.SerializerMethodField()
 
     class Meta(OrderSerializer.Meta):
-        fields = OrderSerializer.Meta.fields + ["disputes", "reviews"]
+        fields = OrderSerializer.Meta.fields + ["disputes", "reviews", "cancel_request"]
+
+    cancel_request = serializers.SerializerMethodField()
+
+    def get_cancel_request(self, obj):
+        cr = obj.cancel_requests.select_related("requested_by").filter(status="pending").first()
+        return {"id": cr.id, "requested_by": cr.requested_by.username, "reason": cr.reason, "created_at": cr.created_at} if cr else None
 
     def get_reviews(self, obj):
         return [{"reviewer": r.reviewer.username, "rating": r.rating, "comment": r.comment} for r in obj.reviews.select_related("reviewer")]
@@ -127,6 +133,12 @@ def order_action(request, pk):
         services.confirm_handover(order, request.user)
     elif action == "dispute":
         services.open_dispute(order, request.user, request.data.get("reason") or "")
+    elif action == "cancel_request":
+        services.request_cancel(order, request.user, request.data.get("reason"))
+    elif action in ("cancel_accept", "cancel_decline"):
+        services.answer_cancel(order, request.user, accept=action == "cancel_accept")
+    elif action == "cancel_withdraw":
+        services.withdraw_cancel(order, request.user)
     elif action == "review":
         if order.status != Order.Status.COMPLETED or request.user.id not in (order.buyer_id, order.seller_id):
             raise ValidationError({"detail": "You can review once the trade is completed."})

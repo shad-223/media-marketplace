@@ -48,7 +48,7 @@ def open_order(buyer, listing_id, offer_id=None):
             raise ValidationError({"detail": "This listing is not available for purchase."})
         if listing.seller_id == buyer.id:
             raise ValidationError({"detail": "You cannot buy your own listing."})
-        amount = offer.amount if offer else listing.price
+        amount = offer.agreed_amount if offer else listing.price
         check_trade_limit(buyer, amount)
         order = Order.objects.create(
             listing=listing, offer=offer, buyer=buyer, seller=listing.seller, amount=amount, fee=_fee(amount)
@@ -203,3 +203,59 @@ def release_due_orders():
         except ValidationError:
             pass
     return released
+
+
+def request_cancel(order, user, reason):
+    from .models import CancelRequest
+
+    with transaction.atomic():
+        order = Order.objects.select_for_update().get(pk=order.pk)
+        if user.id not in (order.buyer_id, order.seller_id):
+            raise ValidationError({"detail": "Not your order."})
+        if order.status != S.IN_ESCROW:
+            raise ValidationError({"detail": "Cancellation can only be requested before the seller marks the transfer."})
+        reason = (reason or "").strip()
+        if len(reason) < 5:
+            raise ValidationError({"reason": "Give a short reason."})
+        if order.cancel_requests.filter(status=CancelRequest.Status.PENDING).exists():
+            raise ValidationError({"detail": "A cancellation request is already waiting for an answer."})
+        cr = CancelRequest.objects.create(order=order, requested_by=user, reason=reason[:500])
+        system_message(order, f"@{user.username} asked to cancel this order: {cr.reason}\nThe other party can accept (full refund to the buyer) or decline.")
+    other = order.seller if user.id == order.buyer_id else order.buyer
+    notify(other, "Cancellation requested", f"@{user.username} wants to cancel {order.code}.", f"/dashboard/orders/{order.pk}")
+    return cr
+
+
+def answer_cancel(order, user, accept):
+    from .models import CancelRequest
+
+    with transaction.atomic():
+        order = Order.objects.select_for_update().get(pk=order.pk)
+        cr = order.cancel_requests.select_for_update().filter(status=CancelRequest.Status.PENDING).first()
+        if not cr:
+            raise ValidationError({"detail": "There is no pending cancellation request."})
+        if user.id not in (order.buyer_id, order.seller_id) or user.id == cr.requested_by_id:
+            raise ValidationError({"detail": "Only the other party can answer this request."})
+        if accept and order.status != S.IN_ESCROW:
+            raise ValidationError({"detail": "The order has moved on and can no longer be cancelled this way."})
+        cr.status = CancelRequest.Status.ACCEPTED if accept else CancelRequest.Status.DECLINED
+        cr.responded_at = timezone.now()
+        cr.save(update_fields=["status", "responded_at"])
+        if accept:
+            refund(order, by=user, reason=f"cancelled by mutual agreement: {cr.reason}")
+        else:
+            system_message(order, f"@{user.username} declined the cancellation request. The trade continues.")
+    if not accept:
+        notify(cr.requested_by, "Cancellation declined", f"{order.code} continues.", f"/dashboard/orders/{order.pk}")
+    return cr
+
+
+def withdraw_cancel(order, user):
+    from .models import CancelRequest
+
+    n = order.cancel_requests.filter(status=CancelRequest.Status.PENDING, requested_by=user).update(
+        status=CancelRequest.Status.WITHDRAWN, responded_at=timezone.now()
+    )
+    if not n:
+        raise ValidationError({"detail": "You have no pending cancellation request."})
+    system_message(order, f"@{user.username} withdrew the cancellation request.")

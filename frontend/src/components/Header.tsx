@@ -13,6 +13,7 @@ import { useConfig } from "@/lib/config";
 import { useLiveChannel } from "@/lib/live";
 
 import { Avatar } from "./Avatar";
+import { MessagesIcon } from "./MessagesIcon";
 import { btnClass } from "./ui";
 
 export function Logo({ className }: { className?: string }) {
@@ -63,10 +64,11 @@ export function Header() {
     if (typeof ev.unread === "number") qc.setQueryData(["notifications"], (old: any) => (old ? { ...old, unread: ev.unread } : old));
     if (ev.event === "notification") {
       // Something happened to this user (sale, offer, payout…) — refresh what the dashboard shows.
-      for (const key of ["notifications", "summary", "orders", "offers", "deposits", "withdrawals", "kyc", "me", "my-listings"]) {
+      for (const key of ["notifications", "summary", "orders", "offers", "deposits", "withdrawals", "kyc", "me", "my-listings", "inbox"]) {
         qc.invalidateQueries({ queryKey: [key] });
       }
     }
+    if (ev.event === "inbox") qc.invalidateQueries({ queryKey: ["inbox"] });
   });
   const notes = useQuery({
     queryKey: ["notifications"],
@@ -116,6 +118,7 @@ export function Header() {
               <Link href="/dashboard/listings/new" className={btnClass("primary", "md", "hidden sm:inline-flex")}>
                 <Plus className="h-4 w-4" /> Sell
               </Link>
+              <MessagesIcon />
               <Link href="/dashboard/notifications" className="relative rounded-xl p-2 text-ink-soft hover:bg-slate-100" aria-label="Notifications">
                 <Bell className="h-5 w-5" />
                 {unread > 0 && (
