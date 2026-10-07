@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
 import { Bell, LayoutDashboard, LogOut, Menu, Plus, Search, Shield, ShieldCheck, X } from "lucide-react";
 import Link from "next/link";
@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import { useLiveChannel } from "@/lib/live";
 
 import { btnClass } from "./ui";
 
@@ -52,11 +53,21 @@ export function Header() {
   const [q, setQ] = useState("");
   useEffect(() => setOpen(false), [path]);
 
+  const qc = useQueryClient();
+  const live = useLiveChannel(me ? "/ws/notifications/" : null, (ev) => {
+    if (typeof ev.unread === "number") qc.setQueryData(["notifications"], (old: any) => (old ? { ...old, unread: ev.unread } : old));
+    if (ev.event === "notification") {
+      // Something happened to this user (sale, offer, payout…) — refresh what the dashboard shows.
+      for (const key of ["notifications", "summary", "orders", "offers", "deposits", "withdrawals", "kyc", "me", "my-listings"]) {
+        qc.invalidateQueries({ queryKey: [key] });
+      }
+    }
+  });
   const notes = useQuery({
     queryKey: ["notifications"],
     queryFn: () => api("/notifications/"),
     enabled: !!me,
-    refetchInterval: 30_000,
+    refetchInterval: live ? false : 60_000,
   });
   const unread = notes.data?.unread || 0;
 

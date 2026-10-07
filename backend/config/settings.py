@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
+    "channels",
     "apps.common",
     "apps.accounts",
     "apps.market",
@@ -71,6 +72,15 @@ TEMPLATES = [
     }
 ]
 WSGI_APPLICATION = "config.wsgi.application"
+ASGI_APPLICATION = "config.asgi.application"
+
+# Real-time escrow chat + notifications. Redis in production, in-process otherwise.
+if os.environ.get("REDIS_URL"):
+    CHANNEL_LAYERS = {
+        "default": {"BACKEND": "channels_redis.core.RedisChannelLayer", "CONFIG": {"hosts": [os.environ["REDIS_URL"]]}}
+    }
+else:
+    CHANNEL_LAYERS = {"default": {"BACKEND": "channels.layers.InMemoryChannelLayer"}}
 
 if os.environ.get("POSTGRES_DB"):
     DATABASES = {

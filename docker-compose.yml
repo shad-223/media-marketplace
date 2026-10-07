@@ -24,9 +24,18 @@ services:
       POSTGRES_HOST: db
       MEDIA_ROOT: /data/media
       PRIVATE_ROOT: /data/private
+      REDIS_URL: redis://redis:6379/0
     volumes: [uploads:/data]
-    depends_on: { db: { condition: service_healthy } }
+    depends_on:
+      db: { condition: service_healthy }
+      redis: { condition: service_started }
     ports: ["127.0.0.1:8020:8000"]
+
+  # Channel layer for real-time escrow chat + notifications. Internal only.
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
 
   # Releases escrow once the 72h buyer-protection window ends.
   scheduler:
