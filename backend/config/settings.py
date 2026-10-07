@@ -120,7 +120,7 @@ REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 24,
     "DEFAULT_THROTTLE_CLASSES": ["rest_framework.throttling.ScopedRateThrottle"],
-    "DEFAULT_THROTTLE_RATES": {"auth": "20/min", "otp": "6/min"},
+    "DEFAULT_THROTTLE_RATES": {"auth": "20/min", "otp": "6/min", "checkout": "10/min"},
 }
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
@@ -142,6 +142,31 @@ MIN_WITHDRAWAL = Decimal(os.environ.get("MIN_WITHDRAWAL", "500"))
 USD_RATE = Decimal(os.environ.get("USD_RATE", "122"))
 # No real gateway credentials yet: sandbox deposits are credited instantly.
 PAYMENTS_SANDBOX = env_bool("PAYMENTS_SANDBOX", True)
+# Public origin of the site (used to build gateway callback / return URLs).
+PUBLIC_BASE_URL = os.environ.get("PUBLIC_BASE_URL", "http://localhost:3010").rstrip("/")
+
+# --- Payment gateways (each is "online" only once its credentials are set) ---
+# bKash Tokenized Checkout
+BKASH_BASE_URL = os.environ.get("BKASH_BASE_URL", "https://tokenized.sandbox.bka.sh/v1.2.0-beta")
+BKASH_APP_KEY = os.environ.get("BKASH_APP_KEY", "")
+BKASH_APP_SECRET = os.environ.get("BKASH_APP_SECRET", "")
+BKASH_USERNAME = os.environ.get("BKASH_USERNAME", "")
+BKASH_PASSWORD = os.environ.get("BKASH_PASSWORD", "")
+# Nagad merchant checkout (keys: base64 DER or PEM)
+NAGAD_BASE_URL = os.environ.get("NAGAD_BASE_URL", "http://sandbox.mynagad.com:10080/remote-payment-gateway-1.0")
+NAGAD_MERCHANT_ID = os.environ.get("NAGAD_MERCHANT_ID", "")
+NAGAD_MERCHANT_NUMBER = os.environ.get("NAGAD_MERCHANT_NUMBER", "")
+NAGAD_MERCHANT_PRIVATE_KEY = os.environ.get("NAGAD_MERCHANT_PRIVATE_KEY", "")
+NAGAD_PG_PUBLIC_KEY = os.environ.get("NAGAD_PG_PUBLIC_KEY", "")
+NAGAD_SERVER_IP = os.environ.get("NAGAD_SERVER_IP", "127.0.0.1")
+# SSLCommerz (Rocket, bank, cards)
+SSLCZ_STORE_ID = os.environ.get("SSLCZ_STORE_ID", "")
+SSLCZ_STORE_PASSWD = os.environ.get("SSLCZ_STORE_PASSWD", "")
+SSLCZ_SANDBOX = env_bool("SSLCZ_SANDBOX", True)
+# Stripe Checkout (USD)
+STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY", "")
+STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
+
 # Return OTP codes in API responses (dev/test only — there is no SMS gateway yet).
 OTP_ECHO = env_bool("OTP_ECHO", DEBUG)
 

@@ -24,10 +24,14 @@ J = JournalTransaction.Kind
 class DepositSerializer(serializers.ModelSerializer):
     method_label = serializers.CharField(source="get_method_display", read_only=True)
     user = serializers.CharField(source="user.username", read_only=True)
+    status_label = serializers.CharField(source="get_status_display", read_only=True)
 
     class Meta:
         model = Deposit
-        fields = ["id", "user", "method", "method_label", "amount", "sender", "reference", "status", "note", "created_at", "reviewed_at"]
+        fields = [
+            "id", "user", "method", "method_label", "amount", "sender", "reference", "status", "status_label", "note",
+            "gateway", "gateway_ref", "gateway_amount", "gateway_currency", "created_at", "reviewed_at",
+        ]
 
 
 class WithdrawalSerializer(serializers.ModelSerializer):

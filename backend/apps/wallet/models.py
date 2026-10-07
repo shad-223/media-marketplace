@@ -81,16 +81,25 @@ class PaymentMethod(models.TextChoices):
 
 class Deposit(models.Model):
     class Status(models.TextChoices):
+        INITIATED = "initiated", "Awaiting online payment"
         PENDING = "pending", "Pending"
         APPROVED = "approved", "Credited"
         REJECTED = "rejected", "Rejected"
+        FAILED = "failed", "Payment failed"
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="deposits")
     method = models.CharField(max_length=10, choices=PaymentMethod.choices)
     amount = models.DecimalField(max_digits=12, decimal_places=2)
     sender = models.CharField(max_length=40, blank=True, help_text="Sending wallet number / account")
-    reference = models.CharField(max_length=60, help_text="Gateway transaction ID")
+    reference = models.CharField(max_length=60, help_text="Gateway transaction ID (manual) or our invoice number (online)")
     status = models.CharField(max_length=10, choices=Status.choices, default=Status.PENDING)
+    # Online checkout (apps.wallet.gateways). Empty gateway = manual TrxID deposit.
+    gateway = models.CharField(max_length=20, blank=True)
+    gateway_session = models.CharField(max_length=120, blank=True, db_index=True, help_text="Gateway payment/session id")
+    gateway_ref = models.CharField(max_length=120, blank=True, help_text="Gateway transaction id once paid")
+    gateway_amount = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True, help_text="Amount charged in gateway currency")
+    gateway_currency = models.CharField(max_length=3, blank=True)
+    checkout_url = models.URLField(max_length=1000, blank=True)
     note = models.CharField(max_length=300, blank=True)
     reviewed_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+")
     created_at = models.DateTimeField(auto_now_add=True)
