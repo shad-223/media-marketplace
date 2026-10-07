@@ -1,9 +1,10 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { ArrowDownToLine, BadgeCheck, Bookmark, Gavel, IdCard, LayoutList, ReceiptText, ShieldCheck, ShoppingBag, Store } from "lucide-react";
+import { ArrowDownToLine, BadgeCheck, Bookmark, Gavel, IdCard, LayoutList, MailCheck, ReceiptText, ShieldCheck, ShoppingBag, Store } from "lucide-react";
 import Link from "next/link";
 
+import { Avatar } from "@/components/Avatar";
 import { PlatformIcon } from "@/components/platform";
 import { ButtonLink, Card, Empty, StatusBadge } from "@/components/ui";
 import { api } from "@/lib/api";
@@ -157,10 +158,15 @@ export default function Overview() {
 
           <Card className="p-5">
             <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-100 text-lg font-bold uppercase text-brand-700">{me?.username.slice(0, 2)}</div>
+              {me && <Avatar username={me.username} src={me.avatar} className="h-12 w-12 text-lg" />}
               <div className="min-w-0">
-                <p className="flex items-center gap-1 truncate font-semibold text-ink">@{me?.username} {me?.is_verified && <BadgeCheck className="h-4 w-4 text-brand-600" />}</p>
+                <Link href={`/u/${me?.username}`} className="flex items-center gap-1 truncate font-semibold text-ink hover:text-brand-700">@{me?.username} {me?.is_verified && <BadgeCheck className="h-4 w-4 text-brand-600" />}</Link>
                 <p className="text-xs text-ink-mute">{me?.is_verified ? "Verified" : "Not verified"} · joined {ago(me?.date_joined)}</p>
+                {me?.email_verified ? (
+                  <p className="flex items-center gap-1 text-xs text-emerald-700"><MailCheck className="h-3.5 w-3.5" /> Email verified</p>
+                ) : (
+                  <Link href="/dashboard/settings" className="text-xs font-semibold text-brand-700">Verify your email →</Link>
+                )}
               </div>
             </div>
             <dl className="mt-4 grid grid-cols-3 gap-2 text-center">

@@ -40,6 +40,9 @@ function LoginForm() {
         <Field label="Password">
           <Input type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required />
         </Field>
+        <div className="-mt-2 text-right">
+          <Link href="/forgot-password" className="text-sm font-semibold text-brand-700">Forgot password?</Link>
+        </div>
         <ErrorNote error={err} />
         <Button className="w-full" size="lg" loading={busy}>Log in</Button>
       </form>

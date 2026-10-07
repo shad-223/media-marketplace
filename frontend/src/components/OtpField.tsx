@@ -7,7 +7,7 @@ import { api } from "@/lib/api";
 import { Button, Field, Input } from "./ui";
 
 /** "Send code" + 6-digit input. Test environments echo the code back (no SMS gateway yet). */
-export function OtpField({ purpose, value, onChange }: { purpose: "withdraw" | "password" | "handover"; value: string; onChange: (v: string) => void }) {
+export function OtpField({ purpose, value, onChange }: { purpose: "withdraw" | "password" | "handover" | "verify_email"; value: string; onChange: (v: string) => void }) {
   const [sent, setSent] = useState<{ sent_to: string; dev_code?: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");

@@ -31,6 +31,8 @@ class User(AbstractUser):
     phone = models.CharField(max_length=20, blank=True)
     bio = models.CharField(max_length=280, blank=True)
     kyc_status = models.CharField(max_length=10, choices=Kyc.choices, default=Kyc.NONE)
+    email_verified = models.BooleanField(default=False)
+    avatar = models.ImageField(upload_to="avatars/", blank=True)
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["username"]
@@ -82,9 +84,11 @@ class OneTimeCode(models.Model):
         WITHDRAW = "withdraw", "Withdrawal"
         PASSWORD = "password", "Password change"
         HANDOVER = "handover", "Confirm handover"
+        RESET = "reset", "Password reset"
+        VERIFY_EMAIL = "verify_email", "Verify email"
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="otps")
-    purpose = models.CharField(max_length=10, choices=Purpose.choices)
+    purpose = models.CharField(max_length=16, choices=Purpose.choices)
     code_hash = models.CharField(max_length=64)
     expires_at = models.DateTimeField()
     attempts = models.PositiveSmallIntegerField(default=0)
