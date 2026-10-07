@@ -36,7 +36,7 @@ services:
     environment: *benv
     volumes: [uploads:/data]
     depends_on: [backend]
-    command: ["sh", "-c", "while true; do python manage.py release_escrow; sleep 300; done"]
+    command: ["sh", "-c", "sleep 60; while true; do python manage.py release_escrow; sleep 300; done"]
 
   frontend:
     build: { context: ./frontend, args: { API_ORIGIN: "http://backend:8000" } }
