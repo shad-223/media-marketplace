@@ -27,6 +27,9 @@ export type Listing = {
   country?: string;
   views?: number;
   admin_note?: string;
+  verify_code?: string;
+  ownership_found?: boolean | null;
+  ownership_checked_at?: string | null;
   has_proof?: boolean;
 };
 

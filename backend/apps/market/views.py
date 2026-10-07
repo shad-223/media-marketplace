@@ -101,6 +101,7 @@ def listing_detail(request, pk):
     data = ListingDetailSerializer(listing, context={"saved_ids": saved_ids(request)}).data
     if not is_owner:
         data.pop("admin_note", None)
+        data.pop("verify_code", None)
     data["seller_reviews"] = ReviewSerializer(Review.objects.filter(reviewee=listing.seller)[:5], many=True).data
     if request.user.is_authenticated:
         mine = Offer.objects.filter(listing=listing, buyer=request.user).first()
@@ -147,7 +148,7 @@ class MyListingDetail(APIView):
         validate_upload(proof)
         extra = {"proof_ref": store_private_file(proof, "proofs")} if proof else {}
         # Any edit to content sends the listing back to admin review.
-        listing = s.save(status=Listing.Status.PENDING, is_verified=False, **extra)
+        listing = s.save(status=Listing.Status.PENDING, is_verified=False, ownership_found=None, ownership_checked_at=None, **extra)
         return Response(ListingDetailSerializer(listing).data)
 
     def delete(self, request, pk):
@@ -292,3 +293,23 @@ def admin_listing_proof(request, pk):
     resp["Content-Disposition"] = f'inline; filename="{name}"'
     resp["Cache-Control"] = "no-store"
     return resp
+
+
+@api_view(["POST"])
+@permission_classes([IsStaff])
+def admin_check_ownership(request, pk):
+    """Fetch the listing's public URL and look for its verify_code."""
+    from .ownership import OwnershipCheckError, code_present
+
+    listing = get_object_or_404(Listing, pk=pk)
+    if not listing.asset_url:
+        raise ValidationError({"detail": "This listing has no public URL to check."})
+    try:
+        found = code_present(listing.asset_url, listing.verify_code)
+    except OwnershipCheckError as e:
+        return Response({"found": None, "error": str(e), "verify_code": listing.verify_code}, status=200)
+    listing.ownership_found, listing.ownership_checked_at = found, timezone.now()
+    listing.save(update_fields=["ownership_found", "ownership_checked_at"])
+    return Response(
+        {"found": found, "error": "", "verify_code": listing.verify_code, "checked_at": listing.ownership_checked_at}
+    )

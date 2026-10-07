@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { ArrowDownToLine, ArrowUpFromLine, BarChart3, Gavel, IdCard, LayoutList, Users } from "lucide-react";
+import { ArrowDownToLine, ArrowUpFromLine, BarChart3, Gavel, IdCard, LayoutList, Settings, Users } from "lucide-react";
 
 import { Shell } from "@/components/Shell";
 import { api } from "@/lib/api";
@@ -19,6 +19,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { href: "/admin/withdrawals", label: "Withdrawals", icon: ArrowUpFromLine, badge: qd.withdrawals },
     { href: "/admin/deposits", label: "Deposits", icon: ArrowDownToLine, badge: qd.deposits },
     { href: "/admin/users", label: "Users", icon: Users },
+    { href: "/admin/settings", label: "Settings", icon: Settings },
   ];
   return (
     <Shell nav={nav} ready={!!me} title="Admin & escrow">

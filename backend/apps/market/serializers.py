@@ -47,6 +47,7 @@ class ListingDetailSerializer(ListingCardSerializer):
     class Meta(ListingCardSerializer.Meta):
         fields = ListingCardSerializer.Meta.fields + [
             "description", "asset_url", "country", "views", "status_label", "admin_note", "has_proof", "updated_at",
+            "verify_code", "ownership_found", "ownership_checked_at",
         ]
 
     def get_has_proof(self, obj):
