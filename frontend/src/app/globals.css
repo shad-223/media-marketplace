@@ -17,3 +17,18 @@ body {
 .scrollbar-none::-webkit-scrollbar {
   display: none;
 }
+/* Order receipt: print only the receipt card, not the site chrome. */
+@media print {
+  body:has(.media-receipt) * {
+    visibility: hidden;
+  }
+  .media-receipt,
+  .media-receipt * {
+    visibility: visible;
+  }
+  .media-receipt {
+    position: absolute;
+    inset: 0 0 auto 0;
+    border: 0;
+  }
+}

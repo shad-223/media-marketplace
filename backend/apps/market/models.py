@@ -86,17 +86,25 @@ class Offer(models.Model):
         REJECTED = "rejected", "Rejected"
         WITHDRAWN = "withdrawn", "Withdrawn"
         PAID = "paid", "Paid"
+        COUNTERED = "countered", "Seller countered"
 
     listing = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name="offers")
     buyer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="offers")
     amount = models.DecimalField(max_digits=12, decimal_places=2)
     message = models.CharField(max_length=500, blank=True)
+    counter_amount = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    counter_message = models.CharField(max_length=500, blank=True)
     status = models.CharField(max_length=10, choices=Status.choices, default=Status.PENDING)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         ordering = ["-created_at"]
+
+    @property
+    def agreed_amount(self):
+        """Price the buyer pays once accepted: the seller's counter if the buyer took it."""
+        return self.counter_amount or self.amount
 
 
 class SavedListing(models.Model):

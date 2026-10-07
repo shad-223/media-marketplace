@@ -81,7 +81,7 @@ class OfferSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Offer
-        fields = ["id", "listing", "buyer", "amount", "message", "status", "status_label", "created_at"]
+        fields = ["id", "listing", "buyer", "amount", "message", "counter_amount", "counter_message", "status", "status_label", "created_at"]
 
 
 class ReviewSerializer(serializers.ModelSerializer):

@@ -10,6 +10,7 @@ urlpatterns = [
     path("api/", include("apps.wallet.urls")),
     path("api/", include("apps.escrow.urls")),
     path("api/", include("apps.common.urls")),
+    path("api/", include("apps.inbox.urls")),
 ]
 # Public uploads (listing covers only; KYC docs and proofs live encrypted in PRIVATE_ROOT and are never served here).
 urlpatterns += [re_path(r"^media/(?P<path>.*)$", serve, {"document_root": settings.MEDIA_ROOT})]

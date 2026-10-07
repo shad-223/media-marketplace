@@ -6,6 +6,7 @@ import Link from "next/link";
 
 import { Avatar } from "@/components/Avatar";
 import { PlatformIcon } from "@/components/platform";
+import { RecentlyViewed } from "@/components/RecentlyViewed";
 import { ButtonLink, Card, Empty, StatusBadge } from "@/components/ui";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
@@ -71,6 +72,8 @@ export default function Overview() {
           </Card>
         ))}
       </div>
+
+      <RecentlyViewed />
 
       <div className="grid gap-6 xl:grid-cols-[1fr_320px]">
         <div className="space-y-6">

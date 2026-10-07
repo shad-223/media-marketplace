@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { Bell, Bookmark, Gavel, Home, IdCard, LayoutList, ReceiptText, Settings, ShoppingCart, Wallet } from "lucide-react";
+import { Bell, BellRing, Bookmark, Gavel, Home, IdCard, LayoutList, MessageCircle, ReceiptText, Settings, ShoppingCart, Wallet } from "lucide-react";
 
 import { Shell } from "@/components/Shell";
 import { api } from "@/lib/api";
@@ -11,12 +11,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const me = useRequireAuth();
   const s = useQuery({ queryKey: ["summary"], queryFn: () => api("/wallet/summary/"), enabled: !!me, refetchInterval: 30_000 });
   const n = useQuery({ queryKey: ["notifications"], queryFn: () => api("/notifications/"), enabled: !!me });
+  const inbox = useQuery({ queryKey: ["inbox"], queryFn: () => api("/inbox/"), enabled: !!me });
   const nav = [
     { href: "/dashboard", label: "Overview", icon: Home },
     { href: "/dashboard/orders", label: "Orders & escrow", icon: ShoppingCart, badge: (s.data?.active_purchases || 0) + (s.data?.active_sales || 0) },
+    { href: "/dashboard/messages", label: "Messages", icon: MessageCircle, badge: inbox.data?.unread },
     { href: "/dashboard/listings", label: "My listings", icon: LayoutList },
     { href: "/dashboard/bids", label: "Bids & offers", icon: Gavel, badge: s.data?.offers_received },
     { href: "/dashboard/saved", label: "Saved", icon: Bookmark },
+    { href: "/dashboard/alerts", label: "Search alerts", icon: BellRing },
     { href: "/dashboard/wallet", label: "Wallet", icon: Wallet },
     { href: "/dashboard/transactions", label: "Transactions", icon: ReceiptText },
     { href: "/dashboard/kyc", label: "Verify identity", icon: IdCard },

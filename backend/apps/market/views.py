@@ -96,7 +96,7 @@ def listing_detail(request, pk):
     is_owner = request.user.is_authenticated and (request.user.id == listing.seller_id or request.user.is_staff)
     if listing.status not in PUBLIC and not is_owner:
         return Response({"detail": "Not found."}, status=404)
-    if not is_owner:
+    if not is_owner and not request.query_params.get("peek"):  # peek = previews (recently viewed) don't count
         Listing.objects.filter(pk=pk).update(views=F("views") + 1)
     data = ListingDetailSerializer(listing, context={"saved_ids": saved_ids(request)}).data
     if not is_owner:
@@ -193,7 +193,7 @@ class OffersView(APIView):
             raise ValidationError({"amount": "Offer must be below the asking price and at least 30% of it."})
         check_trade_limit(request.user, amount)
         with transaction.atomic():
-            Offer.objects.filter(listing=listing, buyer=request.user, status=Offer.Status.PENDING).update(status=Offer.Status.WITHDRAWN)
+            Offer.objects.filter(listing=listing, buyer=request.user, status__in=[Offer.Status.PENDING, Offer.Status.COUNTERED]).update(status=Offer.Status.WITHDRAWN)
             offer = Offer.objects.create(listing=listing, buyer=request.user, amount=amount, message=(request.data.get("message") or "")[:500])
         notify(listing.seller, "New offer received", f"{request.user.username} offered ৳{amount:,.2f} for “{listing.title}”.", "/dashboard/bids?tab=received")
         return Response(OfferSerializer(offer).data, status=201)
@@ -217,13 +217,40 @@ def offer_action(request, pk):
             + (" Pay now to open escrow." if action == "accept" else ""),
             f"/listings/{offer.listing_id}",
         )
+    elif action == "counter":
+        if offer.listing.seller_id != request.user.id:
+            raise PermissionDenied()
+        if offer.status != Offer.Status.PENDING or offer.listing.status != Listing.Status.APPROVED:
+            raise ValidationError({"detail": "Only a pending offer on a live listing can be countered."})
+        counter = _dec(request.data.get("counter_amount"))
+        if counter is None or counter <= offer.amount or counter > offer.listing.price:
+            raise ValidationError({"counter_amount": "Counter must be above the buyer's offer and no more than your asking price."})
+        offer.counter_amount, offer.counter_message = counter, (request.data.get("message") or "")[:500]
+        offer.status = Offer.Status.COUNTERED
+        offer.save(update_fields=["counter_amount", "counter_message", "status"])
+        notify(offer.buyer, "Seller sent a counter-offer", f"৳{counter:,.2f} for “{offer.listing.title}” (you offered ৳{offer.amount:,.2f}).", "/dashboard/bids")
+    elif action in ("accept_counter", "decline_counter"):
+        if offer.buyer_id != request.user.id:
+            raise PermissionDenied()
+        if offer.status != Offer.Status.COUNTERED or offer.listing.status != Listing.Status.APPROVED:
+            raise ValidationError({"detail": "There is no open counter-offer to answer."})
+        if action == "accept_counter":
+            from apps.escrow.services import check_trade_limit
+
+            check_trade_limit(request.user, offer.counter_amount)
+            offer.status = Offer.Status.ACCEPTED
+        else:
+            offer.status, offer.counter_amount = Offer.Status.REJECTED, None
+        offer.save(update_fields=["status", "counter_amount"])
+        verb = "accepted" if action == "accept_counter" else "declined"
+        notify(offer.listing.seller, f"Counter-offer {verb}", f"@{request.user.username} {verb} your counter on “{offer.listing.title}”.", "/dashboard/bids?tab=received")
     elif action == "withdraw":
-        if offer.buyer_id != request.user.id or offer.status not in (Offer.Status.PENDING, Offer.Status.ACCEPTED):
+        if offer.buyer_id != request.user.id or offer.status not in (Offer.Status.PENDING, Offer.Status.ACCEPTED, Offer.Status.COUNTERED):
             raise ValidationError({"detail": "This offer cannot be withdrawn."})
         offer.status = Offer.Status.WITHDRAWN
         offer.save(update_fields=["status"])
     else:
-        raise ValidationError({"action": "accept, reject or withdraw"})
+        raise ValidationError({"action": "accept, reject, counter, accept_counter, decline_counter or withdraw"})
     return Response(OfferSerializer(offer).data)
 
 
@@ -268,6 +295,9 @@ def admin_listing_decide(request, pk):
         listing.status, listing.approved_at = Listing.Status.APPROVED, timezone.now()
         listing.is_verified = bool(request.data.get("verified"))
         notify(listing.seller, "Listing approved ✓", f"“{listing.title}” is now live on the marketplace.", f"/listings/{listing.pk}")
+        from apps.inbox.alerts import schedule_alerts
+
+        schedule_alerts(listing)
     elif decision == "reject":
         if listing.status in (Listing.Status.RESERVED, Listing.Status.SOLD):
             raise ValidationError({"detail": "Listing is in escrow or sold."})

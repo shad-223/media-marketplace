@@ -8,6 +8,8 @@ import { useState } from "react";
 
 import { Avatar } from "@/components/Avatar";
 import { ListingCover, SaveButton } from "@/components/ListingCard";
+import { MessageSellerButton } from "@/components/MessageSellerButton";
+import { RecordView } from "@/components/RecentlyViewed";
 import { PLATFORMS, PlatformIcon } from "@/components/platform";
 import { Badge, Button, ButtonLink, Card, ErrorNote, Field, Input, Modal, Spinner, StatusBadge, Textarea } from "@/components/ui";
 import { api } from "@/lib/api";
@@ -62,6 +64,7 @@ export default function ListingPage({ params }: { params: { id: string } }) {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
+      <RecordView id={l.id} />
       <nav className="mb-4 text-sm text-ink-mute">
         <Link href="/marketplace">Marketplace</Link> / <Link href={`/marketplace?category=${l.category}`}>{p.short}</Link>
       </nav>
@@ -143,11 +146,14 @@ export default function ListingPage({ params }: { params: { id: string } }) {
                 <p className="rounded-xl bg-slate-100 p-3 text-center text-sm font-semibold text-ink-soft">{l.status === "sold" ? "This asset has been sold" : "Currently in escrow with another buyer"}</p>
               ) : myOffer?.status === "accepted" ? (
                 <>
-                  <p className="rounded-xl bg-emerald-50 p-3 text-sm text-emerald-800">Your offer of <b>{taka(myOffer.amount)}</b> was accepted.</p>
-                  <Button size="lg" className="w-full" onClick={() => setBuyOpen(true)}>Pay {taka(myOffer.amount)} into escrow</Button>
+                  <p className="rounded-xl bg-emerald-50 p-3 text-sm text-emerald-800">Your offer of <b>{taka(myOffer.counter_amount || myOffer.amount)}</b> was accepted.</p>
+                  <Button size="lg" className="w-full" onClick={() => setBuyOpen(true)}>Pay {taka(myOffer.counter_amount || myOffer.amount)} into escrow</Button>
                 </>
               ) : (
                 <>
+                  {myOffer?.status === "countered" && (
+                    <ButtonLink href="/dashboard/bids" variant="secondary" className="w-full">Seller countered at {taka(myOffer.counter_amount)} — respond</ButtonLink>
+                  )}
                   <Button size="lg" className="w-full" onClick={() => (me ? setBuyOpen(true) : needLogin())}>Buy now</Button>
                   {l.allow_offers && (
                     <Button size="lg" variant="secondary" className="w-full" onClick={() => (me ? setOfferOpen(true) : needLogin())}>
@@ -156,6 +162,7 @@ export default function ListingPage({ params }: { params: { id: string } }) {
                   )}
                 </>
               )}
+              {!mine && <MessageSellerButton listingId={l.id} sellerId={l.seller.id} title={l.title} />}
             </div>
             <ul className="mt-6 space-y-2.5 text-sm text-ink-soft">
               <li className="flex gap-2"><ShieldCheck className="h-5 w-5 shrink-0 text-emerald-600" /> Money held in escrow until you confirm ownership</li>
@@ -168,7 +175,7 @@ export default function ListingPage({ params }: { params: { id: string } }) {
 
       <Modal open={buyOpen} onClose={() => setBuyOpen(false)} title="Pay into escrow">
         {(() => {
-          const price = myOffer?.status === "accepted" ? Number(myOffer.amount) : Number(l.price);
+          const price = myOffer?.status === "accepted" ? Number(myOffer.counter_amount || myOffer.amount) : Number(l.price);
           const short = balance < price;
           return (
             <div className="space-y-4">

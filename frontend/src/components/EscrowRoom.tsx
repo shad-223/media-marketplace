@@ -69,7 +69,7 @@ export function EscrowRoom({ id, admin }: { id: string; admin?: boolean }) {
   const msgs = useQuery({ queryKey: ["messages", id], queryFn: () => api<Msg[]>(`/orders/${id}/messages/`), refetchInterval: fallback });
   const [body, setBody] = useState("");
   const [file, setFile] = useState<File | null>(null);
-  const [modal, setModal] = useState<"" | "confirm" | "dispute" | "transfer" | "review" | "release" | "refund">("");
+  const [modal, setModal] = useState<"" | "confirm" | "dispute" | "transfer" | "review" | "release" | "refund" | "cancel">("");
   const [otp, setOtp] = useState("");
   const [text, setText] = useState("");
   const [rating, setRating] = useState(5);
@@ -233,9 +233,27 @@ export function EscrowRoom({ id, admin }: { id: string; admin?: boolean }) {
             <Button variant="secondary" className="w-full" onClick={() => setModal("review")}><Star className="h-4 w-4" /> Leave a review</Button>
           ))}
           {o.status === "refunded" && <p className="text-sm text-ink-soft">This order was refunded to the buyer.</p>}
+          {o.cancel_request && (
+            <div className="rounded-xl bg-amber-50 p-3 text-sm text-amber-900">
+              <p><b>@{o.cancel_request.requested_by}</b> asked to cancel: “{o.cancel_request.reason}”</p>
+              {role !== "admin" && (o.cancel_request.requested_by === (role === "buyer" ? o.buyer.username : o.seller.username) ? (
+                <Button size="sm" variant="ghost" className="mt-2" loading={act.isPending} onClick={() => act.mutate({ action: "cancel_withdraw" })}>Withdraw request</Button>
+              ) : (
+                <div className="mt-2 flex gap-2">
+                  <Button size="sm" variant="danger" loading={act.isPending} onClick={() => act.mutate({ action: "cancel_accept" })}>Agree & refund buyer</Button>
+                  <Button size="sm" variant="secondary" onClick={() => act.mutate({ action: "cancel_decline" })}>Decline</Button>
+                </div>
+              ))}
+              {!modal && <ErrorNote error={act.error} />}
+            </div>
+          )}
+          {o.status === "in_escrow" && role !== "admin" && !o.cancel_request && (
+            <Button variant="ghost" className="w-full" onClick={() => setModal("cancel")}>Request cancellation</Button>
+          )}
           {open && role !== "admin" && (
             <Button variant="ghost" className="w-full text-rose-600" onClick={() => setModal("dispute")}><AlertTriangle className="h-4 w-4" /> Open a dispute</Button>
           )}
+          <Link href={`/dashboard/orders/${o.id}/receipt`} className="block text-center text-xs font-semibold text-brand-700">View / print receipt</Link>
           {role === "admin" && (o.status !== "completed" && o.status !== "refunded") && (
             <div className="grid grid-cols-2 gap-2">
               <Button variant="success" onClick={() => setModal("release")}>Release</Button>
@@ -269,6 +287,14 @@ export function EscrowRoom({ id, admin }: { id: string; admin?: boolean }) {
           <p className="text-sm text-ink-soft">This starts the {hours}-hour buyer-protection window, after which {taka(o.seller_net)} is released to the seller. You can still open a dispute during the window.</p>
           <OtpField purpose="handover" value={otp} onChange={setOtp} />
           <Button variant="success" className="w-full" loading={act.isPending} disabled={otp.length !== 6} onClick={() => act.mutate({ action: "confirm", otp })}>I own the asset — confirm</Button>
+          <ErrorNote error={act.error} />
+        </div>
+      </Modal>
+      <Modal open={modal === "cancel"} onClose={() => setModal("")} title="Request cancellation">
+        <div className="space-y-4">
+          <p className="text-sm text-ink-soft">Only possible before the seller marks the transfer. If the other party agrees, the full {taka(o.amount)} goes back to the buyer and the listing returns to the marketplace.</p>
+          <Field label="Reason"><Textarea value={text} onChange={(e) => setText(e.target.value)} placeholder="e.g. I can no longer complete this purchase." /></Field>
+          <Button className="w-full" loading={act.isPending} onClick={() => act.mutate({ action: "cancel_request", reason: text })}>Send request</Button>
           <ErrorNote error={act.error} />
         </div>
       </Modal>
