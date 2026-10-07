@@ -1,0 +1,34 @@
+"use client";
+
+import { AdminQueue, DecisionButtons, type Decision } from "@/components/AdminQueue";
+import { Card, StatusBadge } from "@/components/ui";
+import { dateTime, taka } from "@/lib/format";
+
+const DECISIONS: Decision[] = [
+  { value: "approve", label: "Verify & credit", variant: "success" },
+  { value: "reject", label: "Reject", variant: "danger", needsNote: true },
+];
+
+export default function AdminDeposits() {
+  return (
+    <AdminQueue<any>
+      title="Deposits"
+      subtitle="Match the transaction ID in the bKash / Nagad / Rocket / bank statement before crediting."
+      endpoint="/admin/deposits/"
+      statuses={[{ value: "pending", label: "Pending" }, { value: "approved", label: "Credited" }, { value: "rejected", label: "Rejected" }]}
+      decisions={DECISIONS}
+      empty="No deposits here."
+      render={(d, decide, pending) => (
+        <Card className="flex flex-wrap items-center gap-3 p-4">
+          <div className="min-w-0 flex-1">
+            <p className="font-semibold">{taka(d.amount, 2)} via {d.method_label}</p>
+            <p className="text-sm text-ink-soft">TrxID <span className="font-mono">{d.reference}</span>{d.sender && ` · from ${d.sender}`}</p>
+            <p className="text-xs text-ink-mute">@{d.user} · {dateTime(d.created_at)}{d.note && ` · ${d.note}`}</p>
+          </div>
+          <StatusBadge status={d.status === "approved" ? "completed" : d.status} label={d.status === "approved" ? "credited" : d.status} />
+          {pending && <DecisionButtons decisions={DECISIONS} decide={decide} />}
+        </Card>
+      )}
+    />
+  );
+}

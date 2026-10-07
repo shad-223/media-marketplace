@@ -1,0 +1,49 @@
+# Media — self-contained stack. Project name "media"; host ports are loopback-only.
+name: media
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: media
+      POSTGRES_USER: media
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set in .env}
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U media -d media"]
+      interval: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    env_file: .env
+    environment: &benv
+      POSTGRES_DB: media
+      POSTGRES_USER: media
+      POSTGRES_HOST: db
+      MEDIA_ROOT: /data/media
+      PRIVATE_ROOT: /data/private
+    volumes: [uploads:/data]
+    depends_on: { db: { condition: service_healthy } }
+    ports: ["127.0.0.1:8020:8000"]
+
+  # Releases escrow once the 72h buyer-protection window ends.
+  scheduler:
+    build: ./backend
+    restart: unless-stopped
+    env_file: .env
+    environment: *benv
+    volumes: [uploads:/data]
+    depends_on: [backend]
+    command: ["sh", "-c", "while true; do python manage.py release_escrow; sleep 300; done"]
+
+  frontend:
+    build: { context: ./frontend, args: { API_ORIGIN: "http://backend:8000" } }
+    restart: unless-stopped
+    depends_on: [backend]
+    ports: ["127.0.0.1:3020:3000"]
+
+volumes:
+  pgdata:
+  uploads:
