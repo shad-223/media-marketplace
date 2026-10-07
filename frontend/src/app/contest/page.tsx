@@ -1,6 +1,7 @@
 import { Medal, Trophy } from "lucide-react";
 import type { Metadata } from "next";
 
+import { Leaderboard } from "@/components/Leaderboard";
 import { ButtonLink, Card } from "@/components/ui";
 
 export const metadata: Metadata = { title: "Contest" };
@@ -32,6 +33,7 @@ export default function Contest() {
           </Card>
         ))}
       </div>
+      <Leaderboard />
       <Card className="mt-8 p-6">
         <h2 className="font-bold text-ink">Rules</h2>
         <ul className="mt-3 list-disc space-y-1.5 pl-5 text-sm text-ink-soft">

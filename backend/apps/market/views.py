@@ -64,6 +64,8 @@ class MarketplaceList(generics.ListAPIView):
             from .models import CATEGORY_GROUP
 
             qs = qs.filter(category__in=[c for c, g in CATEGORY_GROUP.items() if g == p["group"]])
+        if p.get("seller"):
+            qs = qs.filter(seller__username__iexact=p["seller"])
         if p.get("q"):
             q = p["q"]
             qs = qs.filter(Q(title__icontains=q) | Q(niche__icontains=q) | Q(description__icontains=q))

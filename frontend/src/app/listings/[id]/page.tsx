@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { Avatar } from "@/components/Avatar";
 import { ListingCover, SaveButton } from "@/components/ListingCard";
 import { PLATFORMS, PlatformIcon } from "@/components/platform";
 import { Badge, Button, ButtonLink, Card, ErrorNote, Field, Input, Modal, Spinner, StatusBadge, Textarea } from "@/components/ui";
@@ -100,11 +101,13 @@ export default function ListingPage({ params }: { params: { id: string } }) {
           <Card className="p-6">
             <h2 className="mb-4 font-bold text-ink">Seller</h2>
             <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-100 font-bold uppercase text-brand-700">{l.seller.username.slice(0, 2)}</div>
+              <Link href={`/u/${l.seller.username}`}>
+                <Avatar username={l.seller.username} src={l.seller.avatar} className="h-12 w-12" />
+              </Link>
               <div>
-                <p className="flex items-center gap-1 font-semibold text-ink">
+                <Link href={`/u/${l.seller.username}`} className="flex items-center gap-1 font-semibold text-ink hover:text-brand-700">
                   @{l.seller.username} {l.seller.is_verified && <BadgeCheck className="h-4 w-4 text-brand-600" />}
-                </p>
+                </Link>
                 <p className="text-xs text-ink-mute">
                   ★ {l.seller.rating?.average || "—"} ({l.seller.rating?.count || 0} reviews) · {l.seller.completed_trades} trades · joined {ago(l.seller.date_joined)}
                 </p>

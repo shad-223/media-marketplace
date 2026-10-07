@@ -130,7 +130,7 @@ REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 24,
     "DEFAULT_THROTTLE_CLASSES": ["rest_framework.throttling.ScopedRateThrottle"],
-    "DEFAULT_THROTTLE_RATES": {"auth": "20/min", "otp": "6/min", "checkout": "10/min"},
+    "DEFAULT_THROTTLE_RATES": {"auth": "20/min", "otp": "6/min", "checkout": "10/min", "reset": "5/min"},
 }
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
@@ -138,7 +138,21 @@ SIMPLE_JWT = {
     "ROTATE_REFRESH_TOKENS": True,
 }
 
-EMAIL_BACKEND = os.environ.get("EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend")
+EMAIL_HOST = os.environ.get("EMAIL_HOST", "")
+EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "587"))
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
+EMAIL_USE_TLS = env_bool("EMAIL_USE_TLS", True)
+EMAIL_TIMEOUT = 10
+# SMTP when EMAIL_HOST is set, otherwise codes/emails are printed to the log.
+EMAIL_BACKEND = os.environ.get(
+    "EMAIL_BACKEND",
+    "django.core.mail.backends.smtp.EmailBackend" if EMAIL_HOST else "django.core.mail.backends.console.EmailBackend",
+)
+# Generic HTTP SMS gateway (BulkSMSBD-style). Unset -> SMS is skipped and logged.
+SMS_API_URL = os.environ.get("SMS_API_URL", "")
+SMS_API_KEY = os.environ.get("SMS_API_KEY", "")
+SMS_SENDER_ID = os.environ.get("SMS_SENDER_ID", "")
 DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "Media <no-reply@media.local>")
 
 # --- Business rules -------------------------------------------------------

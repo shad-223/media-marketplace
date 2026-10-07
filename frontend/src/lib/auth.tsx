@@ -14,7 +14,11 @@ export type Me = {
   bio: string;
   kyc_status: "none" | "pending" | "verified" | "rejected";
   is_verified: boolean;
+  email_verified: boolean;
+  avatar: string | null;
   is_staff: boolean;
+  is_superuser: boolean;
+  is_active: boolean;
   rating: { average: number; count: number };
   completed_trades: number;
   date_joined: string;

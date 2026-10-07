@@ -9,13 +9,17 @@ class PublicUserSerializer(serializers.ModelSerializer):
     is_verified = serializers.BooleanField(read_only=True)
     rating = serializers.SerializerMethodField()
     completed_trades = serializers.SerializerMethodField()
+    avatar = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ["id", "username", "bio", "is_verified", "rating", "completed_trades", "date_joined"]
+        fields = ["id", "username", "bio", "avatar", "is_verified", "email_verified", "rating", "completed_trades", "date_joined"]
 
     def get_rating(self, obj):
         return obj.rating()
+
+    def get_avatar(self, obj):
+        return obj.avatar.url if obj.avatar else None
 
     def get_completed_trades(self, obj):
         from apps.escrow.models import Order
@@ -26,8 +30,8 @@ class PublicUserSerializer(serializers.ModelSerializer):
 class MeSerializer(PublicUserSerializer):
     class Meta:
         model = User
-        fields = PublicUserSerializer.Meta.fields + ["email", "phone", "kyc_status", "is_staff", "is_active"]
-        read_only_fields = ["email", "kyc_status", "is_staff", "is_active", "date_joined"]
+        fields = PublicUserSerializer.Meta.fields + ["email", "phone", "kyc_status", "is_staff", "is_superuser", "is_active"]
+        read_only_fields = ["email", "email_verified", "kyc_status", "is_staff", "is_superuser", "is_active", "date_joined"]
 
 
 class RegisterSerializer(serializers.Serializer):

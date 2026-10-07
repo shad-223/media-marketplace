@@ -11,6 +11,7 @@ import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useLiveChannel } from "@/lib/live";
 
+import { Avatar } from "./Avatar";
 import { btnClass } from "./ui";
 
 export function Logo({ className }: { className?: string }) {
@@ -122,8 +123,8 @@ export function Header() {
                   <Shield className="h-5 w-5" />
                 </Link>
               )}
-              <Link href="/dashboard" className="hidden h-9 w-9 items-center justify-center rounded-full bg-brand-100 text-sm font-bold uppercase text-brand-700 sm:flex" title={me.username}>
-                {me.username.slice(0, 2)}
+              <Link href="/dashboard" className="hidden sm:block" title={me.username}>
+                <Avatar username={me.username} src={me.avatar} className="h-9 w-9 text-sm" />
               </Link>
             </>
           ) : me === null ? (

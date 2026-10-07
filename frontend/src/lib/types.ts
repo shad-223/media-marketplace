@@ -18,7 +18,7 @@ export type Listing = {
   is_verified: boolean;
   status: string;
   status_label?: string;
-  seller: Mini & { rating?: { average: number; count: number }; completed_trades?: number; bio?: string; date_joined?: string };
+  seller: Mini & { avatar?: string | null; rating?: { average: number; count: number }; completed_trades?: number; bio?: string; date_joined?: string };
   is_saved: boolean;
   approved_at: string | null;
   created_at: string;

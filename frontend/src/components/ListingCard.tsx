@@ -57,6 +57,33 @@ export function SaveButton({ listing, className }: { listing: Listing; className
   );
 }
 
+/** The card itself is a link, so the seller name navigates programmatically (no nested <a>). */
+function SellerLink({ username, verified }: { username: string; verified: boolean }) {
+  const router = useRouter();
+  return (
+    <span
+      role="link"
+      tabIndex={0}
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        router.push(`/u/${username}`);
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          e.stopPropagation();
+          router.push(`/u/${username}`);
+        }
+      }}
+      className="flex cursor-pointer items-center gap-1 text-ink-mute hover:text-brand-700 hover:underline"
+    >
+      @{username}
+      {verified && <BadgeCheck className="h-3.5 w-3.5 text-brand-600" />}
+    </span>
+  );
+}
+
 export function ListingCard({ listing }: { listing: Listing }) {
   const p = PLATFORMS[listing.category] || PLATFORMS.website;
   const sold = listing.status === "sold";
@@ -108,10 +135,7 @@ export function ListingCard({ listing }: { listing: Listing }) {
                 <BadgeCheck className="h-4 w-4" /> Verified metrics
               </span>
             )}
-            <span className="flex items-center gap-1 text-ink-mute">
-              @{listing.seller.username}
-              {listing.seller.is_verified && <BadgeCheck className="h-3.5 w-3.5 text-brand-600" />}
-            </span>
+            <SellerLink username={listing.seller.username} verified={listing.seller.is_verified} />
           </div>
         </div>
       </div>
