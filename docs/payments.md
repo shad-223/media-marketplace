@@ -23,7 +23,7 @@ callback credits at most once.
 ## Environment variables (`/opt/media/.env`)
 
 ```
-PUBLIC_BASE_URL=https://media.bpda.site        # used to build callback + return URLs
+PUBLIC_BASE_URL=https://sell.agamirshwapno.site        # used to build callback + return URLs
 
 # bKash Tokenized Checkout
 BKASH_BASE_URL=https://tokenized.pay.bka.sh/v1.2.0-beta   # sandbox: https://tokenized.sandbox.bka.sh/v1.2.0-beta
@@ -47,11 +47,11 @@ STRIPE_SECRET_KEY=sk_live_...  STRIPE_WEBHOOK_SECRET=whsec_...
 
 | Provider | URL |
 |---|---|
-| bKash callback | sent automatically per payment: `https://media.bpda.site/api/wallet/callback/bkash/` |
-| Nagad callback | sent automatically: `https://media.bpda.site/api/wallet/callback/nagad/` |
-| SSLCommerz success/fail/cancel | sent automatically: `https://media.bpda.site/api/wallet/callback/sslcommerz/` |
-| SSLCommerz IPN | set in merchant panel: `https://media.bpda.site/api/wallet/ipn/sslcommerz/` |
-| Stripe webhook | Dashboard → Developers → Webhooks: `https://media.bpda.site/api/wallet/webhook/stripe/`, events `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `checkout.session.expired` |
+| bKash callback | sent automatically per payment: `https://sell.agamirshwapno.site/api/wallet/callback/bkash/` |
+| Nagad callback | sent automatically: `https://sell.agamirshwapno.site/api/wallet/callback/nagad/` |
+| SSLCommerz success/fail/cancel | sent automatically: `https://sell.agamirshwapno.site/api/wallet/callback/sslcommerz/` |
+| SSLCommerz IPN | set in merchant panel: `https://sell.agamirshwapno.site/api/wallet/ipn/sslcommerz/` |
+| Stripe webhook | Dashboard → Developers → Webhooks: `https://sell.agamirshwapno.site/api/wallet/webhook/stripe/`, events `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `checkout.session.expired` |
 
 After paying, users land on `/dashboard/wallet/return?deposit=<id>`, which polls
 `GET /api/wallet/deposits/<id>/` (for Stripe it also looks the session up directly, so the balance

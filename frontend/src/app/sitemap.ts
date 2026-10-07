@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 
-const BASE = "https://media.bpda.site";
+const BASE = "https://sell.agamirshwapno.site";
 const API = process.env.API_ORIGIN || "http://127.0.0.1:8010";
 
 export const revalidate = 3600;

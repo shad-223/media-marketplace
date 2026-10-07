@@ -107,11 +107,11 @@ export function Header() {
           </div>
         </form>
         <div className="ml-auto flex items-center gap-2 md:ml-0">
-          <Link href="/dashboard/listings/new" className={btnClass("primary", "md", "hidden sm:inline-flex")}>
-            <Plus className="h-4 w-4" /> Sell
-          </Link>
           {me ? (
             <>
+              <Link href="/dashboard/listings/new" className={btnClass("primary", "md", "hidden sm:inline-flex")}>
+                <Plus className="h-4 w-4" /> Sell
+              </Link>
               <Link href="/dashboard/notifications" className="relative rounded-xl p-2 text-ink-soft hover:bg-slate-100" aria-label="Notifications">
                 <Bell className="h-5 w-5" />
                 {unread > 0 && (
@@ -129,10 +129,11 @@ export function Header() {
             </>
           ) : me === null ? (
             <>
-              <Link href="/login" className={btnClass("ghost", "md", "hidden sm:inline-flex")}>
+              {/* Visitors always see Log in + Sign up on the right, on every screen size. */}
+              <Link href="/login" className={btnClass("secondary", "sm", "sm:h-10 sm:px-4")}>
                 Log in
               </Link>
-              <Link href="/register" className={btnClass("secondary", "md")}>
+              <Link href="/register" className={btnClass("primary", "sm", "sm:h-10 sm:px-4")}>
                 Sign up
               </Link>
             </>
