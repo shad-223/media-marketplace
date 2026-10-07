@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { api, openProtectedFile } from "@/lib/api";
 import { countdown, dateTime, taka } from "@/lib/format";
+import { useLiveChannel } from "@/lib/live";
 import type { Order } from "@/lib/types";
 
 import { OtpField } from "./OtpField";
@@ -45,8 +46,25 @@ function Timeline({ o }: { o: Order }) {
 
 export function EscrowRoom({ id, admin }: { id: string; admin?: boolean }) {
   const qc = useQueryClient();
-  const order = useQuery({ queryKey: ["order", id], queryFn: () => api<Order>(`/orders/${id}/`), refetchInterval: 15_000 });
-  const msgs = useQuery({ queryKey: ["messages", id], queryFn: () => api<Msg[]>(`/orders/${id}/messages/`), refetchInterval: 4_000 });
+  // Server pushes new messages + status changes; polling only runs (slowly) while the socket is down.
+  const live = useLiveChannel(`/ws/orders/${id}/`, async (ev) => {
+    if (ev.event === "message") {
+      const have = qc.getQueryData<Msg[]>(["messages", id]) || [];
+      const after = have.length ? have[have.length - 1].id : 0;
+      const fresh = await api<Msg[]>(`/orders/${id}/messages/?after=${after}`).catch(() => null);
+      if (!fresh) return qc.invalidateQueries({ queryKey: ["messages", id] });
+      qc.setQueryData<Msg[]>(["messages", id], (old = []) => {
+        const seen = new Set(old.map((m) => m.id));
+        return [...old, ...fresh.filter((m) => !seen.has(m.id))];
+      });
+    } else if (ev.event === "order") {
+      qc.invalidateQueries({ queryKey: ["order", id] });
+      qc.invalidateQueries({ queryKey: ["summary"] });
+    }
+  });
+  const fallback = live ? false : 30_000;
+  const order = useQuery({ queryKey: ["order", id], queryFn: () => api<Order>(`/orders/${id}/`), refetchInterval: fallback });
+  const msgs = useQuery({ queryKey: ["messages", id], queryFn: () => api<Msg[]>(`/orders/${id}/messages/`), refetchInterval: fallback });
   const [body, setBody] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [modal, setModal] = useState<"" | "confirm" | "dispute" | "transfer" | "review" | "release" | "refund">("");
@@ -122,8 +140,14 @@ export function EscrowRoom({ id, admin }: { id: string; admin?: boolean }) {
         <Card className="flex h-[560px] flex-col overflow-hidden">
           <div className="flex items-center gap-2 border-b border-slate-100 px-5 py-3">
             <ShieldCheck className="h-5 w-5 text-emerald-600" />
-            <div>
-              <p className="text-sm font-bold text-ink">Escrow room</p>
+            <div className="flex-1">
+              <p className="flex items-center gap-2 text-sm font-bold text-ink">
+                Escrow room
+                <span className={clsx("flex items-center gap-1 text-[11px] font-semibold", live ? "text-emerald-600" : "text-ink-mute")}>
+                  <span className={clsx("h-1.5 w-1.5 rounded-full", live ? "animate-pulse bg-emerald-500" : "bg-slate-300")} />
+                  {live ? "Live" : "Reconnecting…"}
+                </span>
+              </p>
               <p className="text-xs text-ink-mute">Buyer · Seller · Media escrow agent — chats are monitored and kept as evidence</p>
             </div>
           </div>
