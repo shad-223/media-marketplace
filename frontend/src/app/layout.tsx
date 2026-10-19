@@ -1,13 +1,15 @@
 import "./globals.css";
 
 import type { Metadata, Viewport } from "next";
-import { Plus_Jakarta_Sans } from "next/font/google";
+import { Fraunces, Hanken_Grotesk, Noto_Sans_Bengali } from "next/font/google";
 
 import { Footer, Header, NoticeBar } from "@/components/Header";
 
 import { Providers } from "./providers";
 
-const font = Plus_Jakarta_Sans({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
+const sans = Hanken_Grotesk({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
+const display = Fraunces({ subsets: ["latin"], variable: "--font-display", display: "swap", weight: ["500", "700"] });
+const bangla = Noto_Sans_Bengali({ subsets: ["bengali"], variable: "--font-bangla", display: "swap", weight: ["500", "600"] });
 
 export const metadata: Metadata = {
   title: { default: "Media — Buy & sell digital assets with escrow", template: "%s · Media" },
@@ -15,12 +17,12 @@ export const metadata: Metadata = {
     "Buy and sell YouTube channels, Facebook pages, Instagram & TikTok accounts, websites, apps and domains — every trade protected by escrow. Pay with bKash, Nagad, Rocket or bank.",
 };
 
-export const viewport: Viewport = { themeColor: "#5b21e6", width: "device-width", initialScale: 1 };
+export const viewport: Viewport = { themeColor: "#0b1f1e", width: "device-width", initialScale: 1 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={font.variable}>
-      <body className="min-h-screen bg-slate-50 font-sans text-ink antialiased">
+    <html lang="en" className={`${sans.variable} ${display.variable} ${bangla.variable}`}>
+      <body className="min-h-screen bg-cream font-sans text-ink antialiased">
         <Providers>
           <NoticeBar />
           <Header />
